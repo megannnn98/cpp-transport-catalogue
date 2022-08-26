@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <cassert>
+#include "transport_catalogue.h"
 
 class InputReader
 {
@@ -25,19 +28,88 @@ public:
                                  [](char ch) { return !std::isspace(ch); }).base(),
                     s.end());
     };
+};
 
-    void Load(std::istream& input)
-    {
-        std::string line{};
-        while (std::getline(input, line)) {
-            ltrim(line);
-            rtrim(line);
-            const auto length = line.length();
-            if (length > 0) {
+//std::string prefix = "-param=";
+//std::string argument = argv[1];
+//if(argument.substr(0, prefix.size()) == prefix) {
+//    std::string argumentValue = argument.substr(prefix.size());
+//}
+TransportCatalogue Load(std::istream& input)
+{
+    InputReader ir;
+    std::string line{};
+    TransportCatalogue::Stop stopHolder;
+    TransportCatalogue::Bus busHolder;
+    TransportCatalogue tc{};
+
+    while (std::getline(input, line)) {
+        ir.ltrim(line);
+        ir.rtrim(line);
+        const auto length = line.length();
+        if (length > 0) {
+            // "Stop Tolstopaltsevo: 55.611087, 37.208290\n"
+            if (line.find("Stop") == 0)
+            {
+                line = line.substr(5, line.length() - 5);
+
+                auto semicon = line.rfind(':');
+                if (semicon != std::string::npos)
+                {
+                    stopHolder.name = line.substr(0, semicon);
+                    line = line.substr(semicon + 1);
+                    auto comma = line.find(',');
+                    if (comma != std::string::npos)
+                    {
+                        line[line.find(',')] = ' ';
+                        std::stringstream ss{line};
+                        float tmp{};
+                        ss >> tmp;
+                        stopHolder.latitude = tmp;
+                        ss >> tmp;
+                        stopHolder.longitude = tmp;
+
+                        tc.AddBusStop(std::move(stopHolder));
+                    }
+                    else
+                    {
+                        assert(false);
+                    }
+                }
+            }
+            // "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
+            else if (line.find("Bus") == 0)
+            {
+                line = line.substr(4, line.length() - 4);
+
+                auto semicon = line.find(':');
+                if (semicon != std::string::npos)
+                {
+                    line[semicon] = ' ';
+                    char delim = (line.find('>') == std::string::npos) ? '-' : '>';
+                    std::stringstream ss{line};
+                    ss >> busHolder.name;
+
+                    std::string stopname{};
+                    while (std::getline(ss, stopname, delim))
+                    {
+                        ir.ltrim(stopname);
+                        ir.rtrim(stopname);
+                        busHolder.busStops.push_back(stopname);
+                    }
+                }
+                else
+                {
+                    std::stringstream ss{line};
+                    ss >> busHolder.name;
+                }
+                tc.AddBus(std::move(busHolder));
             }
         }
     }
-};
+
+    return tc;
+}
 
 //В первой строке стандартного потока ввода содержится
 //число N — количество запросов на обновление базы данных,

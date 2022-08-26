@@ -24,29 +24,40 @@ public:
     };
     struct Bus
     {
-        std::string name;
-        std::vector<Stop> busStops;
+        int name;
+        std::vector<std::string> busStops;
     };
 
     void AddBus(Bus&& bus)
     {
+        int name = bus.name;
+        auto it = std::find_if(buses.begin(),
+                            buses.end(),
+                            [name](const Bus& bus ){
+                                return bus.name == name;
+                            });
+        if ((it != buses.end()) && (bus.busStops.empty())) {
+            return;
+        }
 
+        buses.push_back(std::move(bus));
     }
 
     void AddBusStop(Stop&& stop)
     {
-
+        busStops.push_back(std::move(stop));
     }
 
     Bus GetBus(std::string name) const
     {
-        return {};
+        auto it = std::find_if(buses.begin(),
+                     buses.end(),
+                     [&name](const Bus& bus){
+            return bus.name == std::atoi(name.c_str());
+        });
+        return *it;
     }
 
-    void PrintBus(int bus)
-    {
-        // Bus 256: 6 stops on bus, 5 unique stops, 4371.02 bus length
-    }
 
     TransportCatalogue() = default;
     TransportCatalogue(const TransportCatalogue&) = default;
