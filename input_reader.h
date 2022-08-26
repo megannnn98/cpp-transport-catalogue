@@ -1,6 +1,6 @@
-#ifndef INPUTREADER_H
-#define INPUTREADER_H
+#pragma once
 
+#include <algorithm>
 
 class InputReader
 {
@@ -11,9 +11,31 @@ public:
     InputReader(InputReader&&) = default;
     InputReader& operator=(InputReader&&) = default;
     ~InputReader() = default;
-};
 
-#endif // INPUTREADER_H
+    void ltrim(std::string& s) {
+        s.erase(s.begin(),
+                    std::find_if(s.begin(), s.end(),
+                                 [](char ch) { return !std::isspace(ch); }));
+    };
+
+    void rtrim(std::string& s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(),
+                                 [](char ch) { return !std::isspace(ch); }).base(),
+                    s.end());
+    };
+
+    void Load(std::istream& input)
+    {
+        std::string line{};
+        while (std::getline(input, line)) {
+            ltrim(line);
+            rtrim(line);
+            const auto length = line.length();
+            if (length > 0) {
+            }
+        }
+    }
+};
 
 //В первой строке стандартного потока ввода содержится
 //число N — количество запросов на обновление базы данных,

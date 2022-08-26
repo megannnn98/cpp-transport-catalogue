@@ -1,6 +1,4 @@
-#ifndef STATREADER
-#define STATREADER
-
+#pragma once
 
 class StatReader
 {
@@ -13,4 +11,3 @@ public:
     ~StatReader() = default;
 };
 
-#endif // STATREADER
