@@ -21,26 +21,26 @@ public:
 
     void PrintBus(const Bus& bus)
     {
-        // Bus X: R stops on route, U unique stops, L route length
+//        // Bus X: R stops on route, U unique stops, L route length
 
-        std::vector<std::string> uniqueStops{bus.busStops.begin(), bus.busStops.end()};
-        uniqueStops.erase(std::unique(uniqueStops.begin(),
-                                      uniqueStops.end()), uniqueStops.end());
+//        std::vector<std::string> uniqueStops{bus.busStops.begin(), bus.busStops.end()};
+//        uniqueStops.erase(std::unique(uniqueStops.begin(),
+//                                      uniqueStops.end()), uniqueStops.end());
 
 
-//      double ComputeDistance(Coordinates from, Coordinates to)
-//      std::vector<std::string> busStops;
-        double distance{};
-        auto it = bus.busStops.begin();
-        auto last = std::prev(bus.busStops.begin());
-        while(it != last)
-        {
-            ComputeDistance(it->, Coordinates to)
-        }
+////      double ComputeDistance(Coordinates from, Coordinates to)
+////      std::vector<std::string> busStops;
+//        double distance{};
+//        auto it = bus.busStops.begin();
+//        auto last = std::prev(bus.busStops.begin());
+//        while(it != last)
+//        {
+////            auto stop1 = GetStopCoords();
+//        }
 
-        std::cout << "Bus " << bus.name << ": "
-                  << bus.busStops.size() << " stops on route, "
-                  << uniqueStops.size() << " unique stops, " << std::endl;
+//        std::cout << "Bus " << bus.name << ": "
+//                  << bus.busStops.size() << " stops on route, "
+//                  << uniqueStops.size() << " unique stops, " << std::endl;
     }
 };
 
