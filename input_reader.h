@@ -105,13 +105,8 @@ TransportCatalogue Load(std::istream& input)
                 ir.rtrim(stopname);
                 busHolder.busStops.push_back(&tc.GetStop(stopname));
             }
+            tc.AddBus(std::move(busHolder));
         }
-        else
-        {
-            std::stringstream ss{busDataLine};
-            ss >> busHolder.name;
-        }
-        tc.AddBus(std::move(busHolder));
     }
 
     return tc;

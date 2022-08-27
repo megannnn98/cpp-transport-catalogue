@@ -55,6 +55,10 @@ public:
                      [&name](const Bus& bus){
             return bus.name == std::atoi(name.c_str());
         });
+        if (it == buses.end()) {
+            static Bus bus{};
+            return bus;
+        }
         return *it;
     }
 
@@ -65,6 +69,10 @@ public:
                      [&name](const Stop& stop){
             return stop.name == name;
         });
+        if (it == busStops.end()) {
+            static Stop stop{};
+            return stop;
+        }
         return *it;
     }
 
