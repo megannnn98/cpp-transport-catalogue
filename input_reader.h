@@ -31,7 +31,7 @@ public:
                     s.end());
     };
 
-    TransportCatalogue::Bus ParseBus(std::string& busDataLine)
+    [[nodiscard]] TransportCatalogue::Bus ParseBus(std::string& busDataLine)
     {
         TransportCatalogue::Bus ret{};
         busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
@@ -70,7 +70,7 @@ public:
         return ret;
     }
 
-    TransportCatalogue::Stop ParseStop(std::string& line)
+    [[nodiscard]] TransportCatalogue::Stop ParseStop(std::string& line)
     {
         static TransportCatalogue::Stop empty{};
         TransportCatalogue::Stop ret{};
@@ -100,10 +100,10 @@ public:
 
 };
 
-TransportCatalogue Load(std::istream& input)
+[[nodiscard]] TransportCatalogue Load(std::istream& input)
 {
-    TransportCatalogue tc{};
-    InputReader ir{tc};
+    TransportCatalogue ret{};
+    InputReader ir{ret};
     std::string line{};
     std::vector<std::string> busDataLines{};
 
@@ -125,7 +125,7 @@ TransportCatalogue Load(std::istream& input)
             if (stop.name.empty()) {
                 continue;
             }
-            tc.AddBusStop(std::move(stop));
+            ret.AddBusStop(std::move(stop));
         }
         else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
         {
@@ -139,8 +139,8 @@ TransportCatalogue Load(std::istream& input)
         if (bus.busStops.empty()) {
             continue;
         }
-        tc.AddBus(std::move(bus));
+        ret.AddBus(std::move(bus));
     }
 
-    return tc;
+    return ret;
 }

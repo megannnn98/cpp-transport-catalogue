@@ -33,7 +33,7 @@ public:
     };
     struct Bus
     {
-        int name;
+        std::string name;
         std::vector<const Stop*> busStops;
 
         bool operator==(const Bus& other)
@@ -42,19 +42,19 @@ public:
         }
     };
 
-    void AddBus(Bus&& bus)
+    void AddBus(Bus&& other)
     {
-        int name = bus.name;
         auto it = std::find_if(buses.begin(),
                             buses.end(),
-                            [name](const Bus& bus ){
-                                return bus.name == name;
+                            [&other](const Bus& bus ){
+                                return bus.name == other.name;
                             });
-        if ((it != buses.end()) && (bus.busStops.empty())) {
+        // found smt and
+        if (it != buses.end()) {
             return;
         }
 
-        buses.push_back(std::move(bus));
+        buses.push_back(std::move(other));
     }
 
     void AddBusStop(Stop&& stop)
@@ -62,12 +62,12 @@ public:
         busStops.push_back(std::move(stop));
     }
 
-    Bus GetBus(std::string name) const
+    [[nodiscard]] Bus GetBus(std::string name) const
     {
         auto it = std::find_if(buses.begin(),
                      buses.end(),
                      [&name](const Bus& bus){
-            return bus.name == std::atoi(name.c_str());
+            return bus.name == name;
         });
         if (it == buses.end()) {
             static Bus bus{};
@@ -76,7 +76,7 @@ public:
         return *it;
     }
 
-    Stop& GetStop(const std::string& name)
+    [[nodiscard]] Stop& GetStop(const std::string& name)
     {
         auto it = std::find_if(busStops.begin(),
                      busStops.end(),
@@ -90,17 +90,17 @@ public:
         return *it;
     }
 
-    std::deque<Stop>& GetStops()
+    [[nodiscard]] std::deque<Stop>& GetStops()
     {
         return busStops;
     }
 
-    std::deque<Bus>& GetBuses()
+    [[nodiscard]] std::deque<Bus>& GetBuses()
     {
         return buses;
     }
 
-    Coordinates& GetStopCoords(const std::string& name)
+    [[nodiscard]] Coordinates& GetStopCoords(const std::string& name)
     {
         auto it = std::find_if(busStops.begin(),
                             busStops.end(),
@@ -125,5 +125,4 @@ public:
 private:
     std::deque<Stop> busStops{};
     std::deque<Bus> buses{};
-    std::unordered_map<const Bus*, const Stop*> numToBus{};
 };
