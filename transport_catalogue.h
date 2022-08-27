@@ -25,7 +25,7 @@ public:
     struct Bus
     {
         int name;
-        std::vector<std::string> busStops;
+        std::vector<const Stop*> busStops;
     };
 
     void AddBus(Bus&& bus)
@@ -54,6 +54,16 @@ public:
                      buses.end(),
                      [&name](const Bus& bus){
             return bus.name == std::atoi(name.c_str());
+        });
+        return *it;
+    }
+
+    Stop& GetStop(const std::string& name)
+    {
+        auto it = std::find_if(busStops.begin(),
+                     busStops.end(),
+                     [&name](const Stop& stop){
+            return stop.name == name;
         });
         return *it;
     }
