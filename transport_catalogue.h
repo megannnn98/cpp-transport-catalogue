@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <deque>
 #include <algorithm>
+#include "geo.h"
 
 //добавление маршрута в базу,
 //добавление остановки в базу,
@@ -19,8 +20,7 @@ public:
     struct Stop
     {
         std::string name;
-        float latitude;
-        float longitude;
+        Coordinates coord;
     };
     struct Bus
     {
@@ -56,6 +56,30 @@ public:
             return bus.name == std::atoi(name.c_str());
         });
         return *it;
+    }
+
+    std::deque<Stop>& GetStops()
+    {
+        return busStops;
+    }
+
+    std::deque<Bus>& GetBuses()
+    {
+        return buses;
+    }
+
+    Coordinates& GetStopCoords(const std::string& name)
+    {
+        auto it = std::find_if(busStops.begin(),
+                            busStops.end(),
+                               [&name](const Stop& stop){
+            return name == stop.name;
+        });
+        if (it == busStops.end()) {
+            static Coordinates coord{};
+            return coord;
+        }
+        return it->coord;
     }
 
 

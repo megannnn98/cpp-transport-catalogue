@@ -42,6 +42,7 @@ TransportCatalogue Load(std::istream& input)
     TransportCatalogue::Stop stopHolder;
     TransportCatalogue::Bus busHolder;
     TransportCatalogue tc{};
+    std::vector<std::string> busDataLines{};
 
     while (std::getline(input, line)) {
         ir.ltrim(line);
@@ -65,9 +66,9 @@ TransportCatalogue Load(std::istream& input)
                         std::stringstream ss{line};
                         float tmp{};
                         ss >> tmp;
-                        stopHolder.latitude = tmp;
+                        stopHolder.coord.lat= tmp;
                         ss >> tmp;
-                        stopHolder.longitude = tmp;
+                        stopHolder.coord.lng = tmp;
 
                         tc.AddBusStop(std::move(stopHolder));
                     }
@@ -80,32 +81,37 @@ TransportCatalogue Load(std::istream& input)
             // "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
             else if (line.find("Bus") == 0)
             {
-                line = line.substr(4, line.length() - 4);
-
-                auto semicon = line.find(':');
-                if (semicon != std::string::npos)
-                {
-                    line[semicon] = ' ';
-                    char delim = (line.find('>') == std::string::npos) ? '-' : '>';
-                    std::stringstream ss{line};
-                    ss >> busHolder.name;
-
-                    std::string stopname{};
-                    while (std::getline(ss, stopname, delim))
-                    {
-                        ir.ltrim(stopname);
-                        ir.rtrim(stopname);
-                        busHolder.busStops.push_back(stopname);
-                    }
-                }
-                else
-                {
-                    std::stringstream ss{line};
-                    ss >> busHolder.name;
-                }
-                tc.AddBus(std::move(busHolder));
+                busDataLines.push_back(std::move(line));
             }
         }
+    }
+
+    for(std::string& busDataLine: busDataLines )
+    {
+        busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
+
+        auto semicon = busDataLine.find(':');
+        if (semicon != std::string::npos)
+        {
+            busDataLine[semicon] = ' ';
+            char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
+            std::stringstream ss{busDataLine};
+            ss >> busHolder.name;
+
+            std::string stopname{};
+            while (std::getline(ss, stopname, delim))
+            {
+                ir.ltrim(stopname);
+                ir.rtrim(stopname);
+                busHolder.busStops.push_back(stopname);
+            }
+        }
+        else
+        {
+            std::stringstream ss{busDataLine};
+            ss >> busHolder.name;
+        }
+        tc.AddBus(std::move(busHolder));
     }
 
     return tc;
