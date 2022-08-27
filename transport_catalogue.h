@@ -22,9 +22,13 @@ public:
         std::string name;
         Coordinates coord;
 
-        bool operator==(const Stop& other)
+        bool operator==(const Stop& other) const
         {
             return (name == other.name) && (coord == other.coord);
+        }
+        bool operator<(const Stop& other) const
+        {
+            return std::tie(name, coord.lat, coord.lng) < std::tie(other.name, other.coord.lat, other.coord.lng);
         }
     };
     struct Bus

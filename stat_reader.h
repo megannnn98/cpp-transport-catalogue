@@ -7,6 +7,8 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include <unordered_set>
+#include <set>
 
 class StatReader
 {
@@ -32,13 +34,12 @@ public:
         }
 
         auto uniqCalc = [](const auto& stops) ->size_t {
-            std::vector<Stop> uniqueStops(stops.size());
+            std::set<Stop> uniqueStops;
 
             for (std::size_t i{}; i < stops.size(); ++i) {
-                uniqueStops[i] = *stops[i];
+                uniqueStops.insert(*stops[i]);
             }
-
-            return std::distance(uniqueStops.begin(), std::unique(uniqueStops.begin(), uniqueStops.end()));
+            return uniqueStops.size();
         };
 
         auto distanceCalc = [](const auto& stops) -> double {
