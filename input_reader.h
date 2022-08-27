@@ -65,9 +65,9 @@ TransportCatalogue Load(std::istream& input)
                         std::stringstream ss{line};
                         float tmp{};
                         ss >> tmp;
-                        stopHolder.latitude = tmp;
+                        stopHolder.coord.lat= tmp;
                         ss >> tmp;
-                        stopHolder.longitude = tmp;
+                        stopHolder.coord.lng = tmp;
 
                         tc.AddBusStop(std::move(stopHolder));
                     }
