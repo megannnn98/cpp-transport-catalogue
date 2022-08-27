@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
+#include <stack>
 #include "transport_catalogue.h"
 
 class InputReader
@@ -48,12 +49,24 @@ public:
         ss >> ret.name;
 
         std::string stopname{};
+        std::stack<TransportCatalogue::Stop*> circleStopHolder{};
         while (std::getline(ss, stopname, delim))
         {
             ltrim(stopname);
             rtrim(stopname);
             ret.busStops.push_back(&tc_.GetStop(stopname));
+            if (delim == '-') {
+                circleStopHolder.push(&tc_.GetStop(stopname));
+            }
         }
+        if (!circleStopHolder.empty()) {
+            circleStopHolder.pop();
+            while (!circleStopHolder.empty()) {
+                ret.busStops.push_back(circleStopHolder.top());
+                circleStopHolder.pop();
+            }
+        }
+
         return ret;
     }
 
