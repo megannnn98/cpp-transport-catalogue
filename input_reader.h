@@ -14,7 +14,7 @@ public:
     InputReader(TransportCatalogue& tc) : tc_{tc} {}
     InputReader(const InputReader&) = delete;
     InputReader& operator=(const InputReader&) = delete;
-    InputReader(InputReader&&) = delete;
+    InputReader(InputReader&&) = default;
     InputReader& operator=(InputReader&&) = delete;
     ~InputReader() = default;
 
@@ -114,7 +114,7 @@ TransportCatalogue Load(std::istream& input)
             }
             tc.AddBusStop(std::move(stop));
         }
-        else if (line.find("Bus") == 0)
+        else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
         {
             busDataLines.push_back(std::move(line));
         }

@@ -29,10 +29,10 @@ int main()
         "Bus 751"};
 
     TransportCatalogue tc{Load(input)};
+    InputReader ir{tc};
+    StatReader sr{tc, ir};
 
-    StatReader sr{tc};
-
-    sr.PrintBus("256");
+    sr.ProcessRequest(input);
 
     return 0;
 }
