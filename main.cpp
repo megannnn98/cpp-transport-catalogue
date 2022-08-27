@@ -30,9 +30,9 @@ int main()
 
     TransportCatalogue tc{Load(input)};
 
-    StatReader sr{};
+    StatReader sr{tc};
 
-    sr.PrintBus(tc.GetBus("256"));
+    sr.PrintBus("200");
 
     return 0;
 }
