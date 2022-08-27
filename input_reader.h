@@ -103,7 +103,7 @@ TransportCatalogue Load(std::istream& input)
             {
                 ir.ltrim(stopname);
                 ir.rtrim(stopname);
-                busHolder.busStops.push_back(stopname);
+                busHolder.busStops.push_back(&tc.GetStop(stopname));
             }
         }
         else
