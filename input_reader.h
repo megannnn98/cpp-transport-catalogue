@@ -11,10 +11,10 @@ class InputReader
 {
 public:
     InputReader() = default;
-    InputReader(const InputReader&) = default;
-    InputReader& operator=(const InputReader&) = default;
-    InputReader(InputReader&&) = default;
-    InputReader& operator=(InputReader&&) = default;
+    InputReader(const InputReader&) = delete;
+    InputReader& operator=(const InputReader&) = delete;
+    InputReader(InputReader&&) = delete;
+    InputReader& operator=(InputReader&&) = delete;
     ~InputReader() = default;
 
     void ltrim(std::string& s) {
@@ -44,7 +44,12 @@ TransportCatalogue Load(std::istream& input)
     TransportCatalogue tc{};
     std::vector<std::string> busDataLines{};
 
-    while (std::getline(input, line)) {
+    std::getline(input, line);
+    ir.ltrim(line);
+    ir.rtrim(line);
+    auto length = line.length();
+
+    while (length--) {
         ir.ltrim(line);
         ir.rtrim(line);
         const auto length = line.length();
@@ -84,7 +89,7 @@ TransportCatalogue Load(std::istream& input)
                 busDataLines.push_back(std::move(line));
             }
         }
-    }
+    } // end while
 
     for(std::string& busDataLine: busDataLines )
     {
