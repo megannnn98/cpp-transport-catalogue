@@ -21,11 +21,21 @@ public:
     {
         std::string name;
         Coordinates coord;
+
+        bool operator==(const Stop& other)
+        {
+            return (name == other.name) && (coord == other.coord);
+        }
     };
     struct Bus
     {
         int name;
         std::vector<const Stop*> busStops;
+
+        bool operator==(const Bus& other)
+        {
+            return (name == other.name) && (busStops == other.busStops);
+        }
     };
 
     void AddBus(Bus&& bus)

@@ -29,14 +29,13 @@ public:
             std::cout << "Bus " << bus.name << ": " << "not found" << std::endl;
             return;
         }
-        std::vector<const Stop*> uniqueStops{};
-        std::copy(bus.busStops.begin(),
-                  bus.busStops.end(), std::back_inserter(uniqueStops));
+        std::vector<Stop> uniqueStops(bus.busStops.size());
 
-        auto lastUnique = std::unique(uniqueStops.begin(), uniqueStops.end(), [](const Stop* s1, const Stop* s2){
-            return s1->name == s2->name;
-        });
-        uniqueStops.erase(lastUnique, uniqueStops.end());
+        for (std::size_t i{}; i < bus.busStops.size(); ++i) {
+            uniqueStops[i] = *bus.busStops[i];
+        }
+
+        auto uniqNum = std::distance(uniqueStops.begin(), std::unique(uniqueStops.begin(), uniqueStops.end()));
 
         double distance{};
         auto it = bus.busStops.begin();
@@ -54,7 +53,7 @@ public:
         // Bus X: R stops on route, U unique stops, L route length
         std::cout << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
-                  << uniqueStops.size() << " unique stops, "
+                  << uniqNum << " unique stops, "
                   << std::setprecision(6) << distance << " route length"<< std::endl;
     }
 };

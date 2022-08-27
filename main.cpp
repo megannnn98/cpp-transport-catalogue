@@ -32,7 +32,7 @@ int main()
 
     StatReader sr{tc};
 
-    sr.PrintBus("200");
+    sr.PrintBus("256");
 
     return 0;
 }
