@@ -102,10 +102,10 @@ public:
 
 
     TransportCatalogue() = default;
-    TransportCatalogue(const TransportCatalogue&) = default;
-    TransportCatalogue& operator=(const TransportCatalogue&) = default;
+    TransportCatalogue(const TransportCatalogue&) = delete;
+    TransportCatalogue& operator=(const TransportCatalogue&) = delete;
     TransportCatalogue(TransportCatalogue&&) = default;
-    TransportCatalogue& operator=(TransportCatalogue&&) = default;
+    TransportCatalogue& operator=(TransportCatalogue&&) = delete;
     ~TransportCatalogue() = default;
 
 private:

@@ -12,9 +12,9 @@ class StatReader
     TransportCatalogue& tc_;
 public:
     StatReader(const StatReader&) = default;
-    StatReader& operator=(const StatReader&) = default;
-    StatReader(StatReader&&) = default;
-    StatReader& operator=(StatReader&&) = default;
+    StatReader& operator=(const StatReader&) = delete;
+    StatReader(StatReader&&) = delete;
+    StatReader& operator=(StatReader&&) = delete;
     ~StatReader() = default;
     StatReader(TransportCatalogue& tc) : tc_(tc) {}
 
