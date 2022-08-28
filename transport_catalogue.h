@@ -41,6 +41,17 @@ public:
             return (name == other.name) && (busStops == other.busStops);
         }
     };
+    struct HasherBus {
+       size_t operator() (const Bus& bus) const {
+            return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
+        }
+    };
+
+    struct HasherStop {
+       size_t operator() (const Stop& stop) const {
+            return std::hash<std::string>{}(stop.name)*37 + stop.coord.lat;
+        }
+    };
 
     void AddBus(Bus&& other)
     {
@@ -117,12 +128,8 @@ public:
 
 private:
 
-    struct Hasher {
-       size_t operator() (const Bus& bus) const {
-            return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
-        }
-    };
+
 
     std::deque<Stop> busStops{};
-    std::unordered_set<Bus, Hasher> buses;
+    std::unordered_set<Bus, HasherBus> buses;
 };

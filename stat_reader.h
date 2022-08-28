@@ -25,6 +25,8 @@ public:
 
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
+    using HasherStop = TransportCatalogue::HasherStop;
+
 
     void PrintBus(std::string name)
     {
@@ -35,15 +37,14 @@ public:
         }
 
         auto uniqCalc = [](const auto& stops) ->size_t {
-            std::set<Stop> uniqueStops;
-
+            std::unordered_set<Stop, HasherStop> uniqueStops;
             for (std::size_t i{}; i < stops.size(); ++i) {
                 uniqueStops.insert(*stops[i]);
             }
             return uniqueStops.size();
         };
 
-        double distanceCalc = std::transform_reduce(bus.busStops.begin(),
+        const double distanceCalc = std::transform_reduce(bus.busStops.begin(),
                              bus.busStops.end() - 1,
                              bus.busStops.begin() + 1,
                              std::size_t(0),
