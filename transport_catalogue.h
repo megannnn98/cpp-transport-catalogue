@@ -21,26 +21,44 @@ public:
     {
         std::string name;
         Coordinates coord;
+
+        bool operator==(const Stop& other) const
+        {
+            return (name == other.name) && (coord == other.coord);
+        }
+        bool operator<(const Stop& other) const
+        {
+            return std::tie(name, coord.lat, coord.lng) < std::tie(other.name, other.coord.lat, other.coord.lng);
+        }
     };
     struct Bus
     {
-        int name;
+        std::string name;
         std::vector<const Stop*> busStops;
+
+        bool operator==(const Bus& other) const
+        {
+            return (name == other.name) && (busStops == other.busStops);
+        }
+    };
+    struct HasherBus {
+       size_t operator() (const Bus& bus) const {
+            return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
+        }
     };
 
-    void AddBus(Bus&& bus)
+    struct HasherStop {
+       size_t operator() (const Stop& stop) const {
+            return std::hash<std::string>{}(stop.name)*37 + stop.coord.lat;
+        }
+    };
+
+    void AddBus(Bus&& other)
     {
-        int name = bus.name;
-        auto it = std::find_if(buses.begin(),
-                            buses.end(),
-                            [name](const Bus& bus ){
-                                return bus.name == name;
-                            });
-        if ((it != buses.end()) && (bus.busStops.empty())) {
+        if (buses.count(other)) {
             return;
         }
-
-        buses.push_back(std::move(bus));
+        buses.insert(std::move(other));
     }
 
     void AddBusStop(Stop&& stop)
@@ -48,21 +66,21 @@ public:
         busStops.push_back(std::move(stop));
     }
 
-    Bus GetBus(std::string name) const
+    [[nodiscard]] Bus GetBus(std::string name) const
     {
         auto it = std::find_if(buses.begin(),
                      buses.end(),
                      [&name](const Bus& bus){
-            return bus.name == std::atoi(name.c_str());
+            return bus.name == name;
         });
-        if (it == buses.end()) {
+        if (!buses.count(*it)) {
             static Bus bus{};
             return bus;
         }
         return *it;
     }
 
-    Stop& GetStop(const std::string& name)
+    [[nodiscard]] Stop& GetStop(const std::string& name)
     {
         auto it = std::find_if(busStops.begin(),
                      busStops.end(),
@@ -76,17 +94,17 @@ public:
         return *it;
     }
 
-    std::deque<Stop>& GetStops()
+    [[nodiscard]] auto& GetStops() const
     {
         return busStops;
     }
 
-    std::deque<Bus>& GetBuses()
+    [[nodiscard]] auto& GetBuses() const
     {
         return buses;
     }
 
-    Coordinates& GetStopCoords(const std::string& name)
+    [[nodiscard]] Coordinates& GetStopCoords(const std::string& name)
     {
         auto it = std::find_if(busStops.begin(),
                             busStops.end(),
@@ -109,7 +127,9 @@ public:
     ~TransportCatalogue() = default;
 
 private:
+
+
+
     std::deque<Stop> busStops{};
-    std::deque<Bus> buses{};
-    std::unordered_map<const Bus*, const Stop*> numToBus{};
+    std::unordered_set<Bus, HasherBus> buses;
 };

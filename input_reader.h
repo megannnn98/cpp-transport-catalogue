@@ -5,15 +5,17 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
+#include <stack>
 #include "transport_catalogue.h"
 
 class InputReader
 {
+    TransportCatalogue& tc_;
 public:
-    InputReader() = default;
+    InputReader(TransportCatalogue& tc) : tc_{tc} {}
     InputReader(const InputReader&) = delete;
     InputReader& operator=(const InputReader&) = delete;
-    InputReader(InputReader&&) = delete;
+    InputReader(InputReader&&) = default;
     InputReader& operator=(InputReader&&) = delete;
     ~InputReader() = default;
 
@@ -28,101 +30,117 @@ public:
                                  [](char ch) { return !std::isspace(ch); }).base(),
                     s.end());
     };
+
+    [[nodiscard]] TransportCatalogue::Bus ParseBus(std::string& busDataLine)
+    {
+        TransportCatalogue::Bus ret{};
+        busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
+
+        auto semicon = busDataLine.find(':');
+        if (semicon == std::string::npos)
+        {
+            static TransportCatalogue::Bus empty{};
+            return empty;
+        }
+
+        busDataLine[semicon] = ' ';
+        char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
+        std::stringstream ss{busDataLine};
+        ss >> ret.name;
+
+        std::string stopname{};
+        std::stack<TransportCatalogue::Stop*> circleStopHolder{};
+        while (std::getline(ss, stopname, delim))
+        {
+            ltrim(stopname);
+            rtrim(stopname);
+            ret.busStops.push_back(&tc_.GetStop(stopname));
+            if (delim == '-') {
+                circleStopHolder.push(&tc_.GetStop(stopname));
+            }
+        }
+        if (!circleStopHolder.empty()) {
+            circleStopHolder.pop();
+            while (!circleStopHolder.empty()) {
+                ret.busStops.push_back(circleStopHolder.top());
+                circleStopHolder.pop();
+            }
+        }
+
+        return ret;
+    }
+
+    [[nodiscard]] TransportCatalogue::Stop ParseStop(std::string& line)
+    {
+        static TransportCatalogue::Stop empty{};
+        TransportCatalogue::Stop ret{};
+        line = line.substr(5, line.length() - 5);
+
+        auto semicon = line.rfind(':');
+        if (semicon == std::string::npos) {
+            return empty;
+        }
+
+        ret.name = line.substr(0, semicon);
+        line = line.substr(semicon + 1);
+        auto comma = line.find(',');
+        if (comma == std::string::npos) {
+            return empty;
+        }
+        line[line.find(',')] = ' ';
+        std::stringstream ss{line};
+        float tmp{};
+        ss >> tmp;
+        ret.coord.lat= tmp;
+        ss >> tmp;
+        ret.coord.lng = tmp;
+
+        return ret;
+    }
+
 };
 
-//std::string prefix = "-param=";
-//std::string argument = argv[1];
-//if(argument.substr(0, prefix.size()) == prefix) {
-//    std::string argumentValue = argument.substr(prefix.size());
-//}
-TransportCatalogue Load(std::istream& input)
+[[nodiscard]] TransportCatalogue Load(std::istream& input)
 {
-    InputReader ir;
+    TransportCatalogue ret{};
+    InputReader ir{ret};
     std::string line{};
-    TransportCatalogue::Stop stopHolder;
-    TransportCatalogue::Bus busHolder;
-    TransportCatalogue tc{};
     std::vector<std::string> busDataLines{};
 
     std::getline(input, line);
     ir.ltrim(line);
     ir.rtrim(line);
-    auto length = line.length();
+    auto lineCnt = std::atoi(line.c_str());
 
-    while (length--) {
+    while (lineCnt--) {
+        std::getline(input, line);
         ir.ltrim(line);
         ir.rtrim(line);
-        const auto length = line.length();
-        if (length > 0) {
-            // "Stop Tolstopaltsevo: 55.611087, 37.208290\n"
-            if (line.find("Stop") == 0)
-            {
-                line = line.substr(5, line.length() - 5);
-
-                auto semicon = line.rfind(':');
-                if (semicon != std::string::npos)
-                {
-                    stopHolder.name = line.substr(0, semicon);
-                    line = line.substr(semicon + 1);
-                    auto comma = line.find(',');
-                    if (comma != std::string::npos)
-                    {
-                        line[line.find(',')] = ' ';
-                        std::stringstream ss{line};
-                        float tmp{};
-                        ss >> tmp;
-                        stopHolder.coord.lat= tmp;
-                        ss >> tmp;
-                        stopHolder.coord.lng = tmp;
-
-                        tc.AddBusStop(std::move(stopHolder));
-                    }
-                    else
-                    {
-                        assert(false);
-                    }
-                }
+        if (line.length() <= 0) {
+            continue;
+        }
+        if (line.find("Stop") == 0)
+        {
+            auto stop = ir.ParseStop(line);
+            if (stop.name.empty()) {
+                continue;
             }
-            // "Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"
-            else if (line.find("Bus") == 0)
-            {
-                busDataLines.push_back(std::move(line));
-            }
+            ret.AddBusStop(std::move(stop));
+        }
+        else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
+        {
+            busDataLines.push_back(std::move(line));
         }
     } // end while
 
     for(std::string& busDataLine: busDataLines )
     {
-        busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
-
-        auto semicon = busDataLine.find(':');
-        if (semicon != std::string::npos)
-        {
-            busDataLine[semicon] = ' ';
-            char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
-            std::stringstream ss{busDataLine};
-            ss >> busHolder.name;
-
-            std::string stopname{};
-            while (std::getline(ss, stopname, delim))
-            {
-                ir.ltrim(stopname);
-                ir.rtrim(stopname);
-                busHolder.busStops.push_back(&tc.GetStop(stopname));
-            }
-            tc.AddBus(std::move(busHolder));
+        auto bus = ir.ParseBus(busDataLine);
+        if (bus.busStops.empty()) {
+            continue;
         }
+        ret.AddBus(std::move(bus));
     }
 
-    return tc;
+    return ret;
 }
-
-//В первой строке стандартного потока ввода содержится
-//число N — количество запросов на обновление базы данных,
-//затем — по одному на строке — вводятся сами запросы. Запросы бывают двух типов.
-
-//Stop X: latitude, longitude
-
-//Bus X: описание маршрута
-//    stop1 - stop2 - ... stopN:
-//    stop1 > stop2 > ... > stopN > stop1

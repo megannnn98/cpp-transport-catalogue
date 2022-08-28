@@ -2,60 +2,90 @@
 
 #include "transport_catalogue.h"
 #include "geo.h"
+#include "input_reader.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include <unordered_set>
+#include <set>
+#include <numeric>
 
 class StatReader
 {
     TransportCatalogue& tc_;
+    InputReader& ir_;
 public:
-    StatReader(const StatReader&) = default;
+    StatReader(const StatReader&) = delete;
     StatReader& operator=(const StatReader&) = delete;
     StatReader(StatReader&&) = delete;
     StatReader& operator=(StatReader&&) = delete;
     ~StatReader() = default;
-    StatReader(TransportCatalogue& tc) : tc_(tc) {}
+    StatReader(TransportCatalogue& tc, InputReader& ir) : tc_(tc), ir_(ir) {}
 
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
+    using HasherStop = TransportCatalogue::HasherStop;
+
 
     void PrintBus(std::string name)
     {
         auto bus = tc_.GetBus(name);
-        if (bus.busStops.empty())
-        {
+        if (bus.busStops.empty()) {
             std::cout << "Bus " << bus.name << ": " << "not found" << std::endl;
             return;
         }
-        std::vector<const Stop*> uniqueStops{};
-        std::copy(bus.busStops.begin(),
-                  bus.busStops.end(), std::back_inserter(uniqueStops));
 
-        auto lastUnique = std::unique(uniqueStops.begin(), uniqueStops.end(), [](const Stop* s1, const Stop* s2){
-            return s1->name == s2->name;
+        auto uniqCalc = [](const auto& stops) ->size_t {
+            std::unordered_set<Stop, HasherStop> uniqueStops;
+            for (std::size_t i{}; i < stops.size(); ++i) {
+                uniqueStops.insert(*stops[i]);
+            }
+            return uniqueStops.size();
+        };
+
+        const double distanceCalc = std::transform_reduce(bus.busStops.begin(),
+                             bus.busStops.end() - 1,
+                             bus.busStops.begin() + 1,
+                             std::size_t(0),
+                             std::plus<std::size_t>(),
+                             [](const Stop* l, const Stop* r){
+           return ComputeDistance(l->coord, r->coord);
         });
-        uniqueStops.erase(lastUnique, uniqueStops.end());
 
-        double distance{};
-        auto it = bus.busStops.begin();
-        auto last = std::prev(bus.busStops.end());
-        while(it != last)
-        {
-            auto it1 = std::next(it);
-            auto& stopCoord1 = (*it)->coord;
-            auto& stopCoord2 = (*it1)->coord;
-
-            distance += ComputeDistance(stopCoord1, stopCoord2);
-            ++it;
-        }
 
         // Bus X: R stops on route, U unique stops, L route length
         std::cout << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
-                  << uniqueStops.size() << " unique stops, "
-                  << std::setprecision(6) << distance << " route length"<< std::endl;
+                  << uniqCalc(bus.busStops) << " unique stops, "
+                  << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
     }
+
+    void ProcessRequest(std::istream& input)
+    {
+        std::string line{};
+        std::vector<std::string> busDataLines{};
+
+        std::getline(input, line);
+        ir_.ltrim(line);
+        ir_.rtrim(line);
+        auto lineCnt = std::atoi(line.c_str());
+
+        while (lineCnt--) {
+            std::getline(input, line);
+            ir_.ltrim(line);
+            ir_.rtrim(line);
+            if (line.length() <= 0) {
+                continue;
+            }
+            if (line.find("Bus") == 0)
+            {
+                PrintBus(line.substr(4, line.size() - 4));
+            }
+        } // end while
+
+    }
+
+
 };
 
