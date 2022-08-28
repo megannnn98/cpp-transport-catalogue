@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <unordered_set>
 #include <set>
+#include <numeric>
 
 class StatReader
 {
@@ -42,28 +43,21 @@ public:
             return uniqueStops.size();
         };
 
-        auto distanceCalc = [](const auto& stops) -> double {
-            double ret{};
-            auto it = stops.begin();
-            auto last = std::prev(stops.end());
-            while(it != last)
-            {
-                auto it1 = std::next(it);
-                auto& stopCoord1 = (*it)->coord;
-                auto& stopCoord2 = (*it1)->coord;
-
-                ret += ComputeDistance(stopCoord1, stopCoord2);
-                ++it;
-            }
-            return ret;
-        };
+        double distanceCalc = std::transform_reduce(bus.busStops.begin(),
+                             bus.busStops.end() - 1,
+                             bus.busStops.begin() + 1,
+                             std::size_t(0),
+                             std::plus<std::size_t>(),
+                             [](const Stop* l, const Stop* r){
+           return ComputeDistance(l->coord, r->coord);
+        });
 
 
         // Bus X: R stops on route, U unique stops, L route length
         std::cout << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
                   << uniqCalc(bus.busStops) << " unique stops, "
-                  << std::setprecision(6) << distanceCalc(bus.busStops) << " route length"<< std::endl;
+                  << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
     }
 
     void ProcessRequest(std::istream& input)
