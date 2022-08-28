@@ -36,7 +36,7 @@ public:
         std::string name;
         std::vector<const Stop*> busStops;
 
-        bool operator==(const Bus& other)
+        bool operator==(const Bus& other) const
         {
             return (name == other.name) && (busStops == other.busStops);
         }
@@ -44,17 +44,10 @@ public:
 
     void AddBus(Bus&& other)
     {
-        auto it = std::find_if(buses.begin(),
-                            buses.end(),
-                            [&other](const Bus& bus ){
-                                return bus.name == other.name;
-                            });
-        // found smt and
-        if (it != buses.end()) {
+        if (buses.count(other)) {
             return;
         }
-
-        buses.push_back(std::move(other));
+        buses.insert(std::move(other));
     }
 
     void AddBusStop(Stop&& stop)
@@ -69,7 +62,7 @@ public:
                      [&name](const Bus& bus){
             return bus.name == name;
         });
-        if (it == buses.end()) {
+        if (!buses.count(*it)) {
             static Bus bus{};
             return bus;
         }
@@ -90,12 +83,12 @@ public:
         return *it;
     }
 
-    [[nodiscard]] std::deque<Stop>& GetStops()
+    [[nodiscard]] auto& GetStops() const
     {
         return busStops;
     }
 
-    [[nodiscard]] std::deque<Bus>& GetBuses()
+    [[nodiscard]] auto& GetBuses() const
     {
         return buses;
     }
@@ -123,6 +116,13 @@ public:
     ~TransportCatalogue() = default;
 
 private:
+
+    struct Hasher {
+       size_t operator() (const Bus& bus) const {
+            return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
+        }
+    };
+
     std::deque<Stop> busStops{};
-    std::deque<Bus> buses{};
+    std::unordered_set<Bus, Hasher> buses;
 };
