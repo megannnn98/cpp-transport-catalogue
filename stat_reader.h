@@ -7,31 +7,25 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
-#include <unordered_set>
-#include <set>
 #include <numeric>
-#include <string_view>
 
 class StatReader
 {
-    TransportCatalogue& tc_;
-    InputReader& ir_;
 public:
     StatReader(const StatReader&) = delete;
     StatReader& operator=(const StatReader&) = delete;
     StatReader(StatReader&&) = delete;
     StatReader& operator=(StatReader&&) = delete;
     ~StatReader() = default;
-    StatReader(TransportCatalogue& tc, InputReader& ir) : tc_(tc), ir_(ir) {}
+    StatReader() = default;
 
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
     using HasherStop = TransportCatalogue::HasherStop;
 
-
-    void PrintBus(std::string_view name)
+    void PrintBus(TransportCatalogue& tc, std::string_view name)
     {
-        auto bus = tc_.GetBus(name);
+        auto bus = tc.GetBus(name);
         if (bus.busStops.empty()) {
             std::cout << "Bus " << name << ": " << "not found" << std::endl;
             return;
@@ -61,32 +55,24 @@ public:
                   << uniqCalc(bus.busStops) << " unique stops, "
                   << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
     }
-
-    void ProcessRequest(std::istream& input)
-    {
-        std::string line{};
-        std::vector<std::string> busDataLines{};
-
-        std::getline(input, line);
-        ir_.ltrim(line);
-        ir_.rtrim(line);
-        auto lineCnt = std::atoi(line.c_str());
-
-        while (lineCnt--) {
-            std::getline(input, line);
-            ir_.ltrim(line);
-            ir_.rtrim(line);
-            if (line.length() <= 0) {
-                continue;
-            }
-            if (line.find("Bus") == 0)
-            {
-                PrintBus(line.substr(4, line.size() - 4));
-            }
-        } // end while
-
-    }
-
-
 };
 
+void inline ProcessRequest(TransportCatalogue& tc, InputReader& ir, InputReadParser& parser, StatReader& sr)
+{
+    std::string line{};
+    std::vector<std::string> busDataLines{};
+    auto lineCnt = ir.ReadLineWithNumber();
+
+    while (lineCnt--) {
+        line = ir.ReadLine();
+        parser.ltrim(line);
+        parser.rtrim(line);
+        if (line.length() <= 0) {
+            continue;
+        }
+        if (line.find("Bus") == 0)
+        {
+            sr.PrintBus(tc, line.substr(4, line.size() - 4));
+        }
+    } // end while
+}

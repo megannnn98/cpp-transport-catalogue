@@ -38,11 +38,14 @@ int main()
 
 //    auto& input = std::cin;
 
-    TransportCatalogue tc{Load(input)};
-    InputReader ir{tc};
-    StatReader sr{tc, ir};
+    InputReader ir{input};
+    InputReadParser parser{};
+    StatReader sr{};
+    TransportCatalogue tc{Load(ir)};
 
-    sr.ProcessRequest(input);
+
+
+    ProcessRequest(tc, ir, parser, sr);
 
     return 0;
 }
