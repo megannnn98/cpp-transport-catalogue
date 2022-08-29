@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <numeric>
 
+namespace output {
 class StatReader
 {
     std::ostream& os_;
@@ -57,8 +58,10 @@ public:
     }
 };
 
-void inline ProcessRequest(TransportCatalogue& tc, InputReader& ir, InputReadParser& parser, StatReader& sr)
+void inline ProcessRequest(TransportCatalogue& tc, input::InputReader& ir, input::InputReadParser& parser, StatReader& sr)
 {
+    using namespace std::literals;
+    static constexpr std::string_view BUS = "Bus"sv;
     std::string line{};
     auto lineCnt = ir.ReadLineWithNumber();
 
@@ -69,10 +72,11 @@ void inline ProcessRequest(TransportCatalogue& tc, InputReader& ir, InputReadPar
         if (line.length() <= 0) {
             continue;
         }
-        if (line.find("Bus") == 0)
+        if (line.find(BUS.data()) == 0)
         {
-            sr.PrintBus(tc, line.substr(4, line.size() - 4));
+            sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - BUS.size() + 1));
         }
     } // end while
     std::cout << std::endl;
 }
+} // namespace output

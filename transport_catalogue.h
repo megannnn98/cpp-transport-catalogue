@@ -7,19 +7,13 @@
 #include <algorithm>
 #include "geo.h"
 
-//добавление маршрута в базу,
-//добавление остановки в базу,
-//поиск маршрута по имени,
-//поиск остановки по имени,
-//получение информации о маршруте.
-
 class TransportCatalogue
 {
 public:
     struct Stop
     {
         std::string name;
-        Coordinates coord;
+        geo::Coordinates coord;
 
         struct Hasher {
            size_t operator() (const Stop& stop) const {
@@ -104,7 +98,7 @@ public:
         return buses;
     }
 
-    [[nodiscard]] Coordinates& GetStopCoords(std::string_view name)
+    [[nodiscard]] geo::Coordinates& GetStopCoords(std::string_view name)
     {
         auto it = std::find_if(busStops.begin(),
                             busStops.end(),
@@ -112,7 +106,7 @@ public:
             return name == stop.name;
         });
         if (it == busStops.end()) {
-            static Coordinates coord{};
+            static geo::Coordinates coord{};
             return coord;
         }
         return it->coord;

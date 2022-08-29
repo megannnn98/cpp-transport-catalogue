@@ -8,6 +8,7 @@
 #include <string_view>
 #include "transport_catalogue.h"
 
+namespace input {
 class InputReader
 {
     std::istream& is_;
@@ -169,3 +170,5 @@ public:
 
     return ret;
 }
+
+} // namespace input
