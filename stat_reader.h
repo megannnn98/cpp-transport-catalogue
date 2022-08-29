@@ -54,14 +54,13 @@ public:
         os_ << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
                   << uniqCalc(bus.busStops) << " unique stops, "
-                  << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
+                  << std::fixed << std::setprecision(2) << distanceCalc << " route length"<< std::endl;
     }
 };
 
 void inline ProcessRequest(TransportCatalogue& tc, InputReader& ir, InputReadParser& parser, StatReader& sr)
 {
     std::string line{};
-    std::vector<std::string> busDataLines{};
     auto lineCnt = ir.ReadLineWithNumber();
 
     while (lineCnt--) {
@@ -76,4 +75,5 @@ void inline ProcessRequest(TransportCatalogue& tc, InputReader& ir, InputReadPar
             sr.PrintBus(tc, line.substr(4, line.size() - 4));
         }
     } // end while
+    std::cout << std::endl;
 }
