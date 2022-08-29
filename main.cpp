@@ -35,23 +35,23 @@ int main()
 //        "Bus pUFj82Cqn3: 97ChPsiaFJ xk - nhfM4\n"
 //        "1\n"
 //        "Bus pUFj82Cqn3\n"};
-    std::istringstream input{
-        "3\n"
-        "Stop A: 55.611087, 37.20829\n"
-        "Stop B: 55.595884, 37.209755\n"
-        "Bus B1: A - B\n"
-        "1\n"
-        "Bus B1\n"};
+//    std::istringstream input{
+//        "3\n"
+//        "Stop A: 55.611087, 37.20829\n"
+//        "Stop B: 55.595884, 37.209755\n"
+//        "Bus B1: A - B\n"
+//        "1\n"
+//        "Bus B1\n"};
 
 
-//    auto& input = std::cin;
+    auto& input = std::cin;
 
-    InputReader ir{input};
-    InputReadParser parser{};
-    StatReader sr{std::cout};
+    input::InputReader ir{input};
+    input::InputReadParser parser{};
+    output::StatReader sr{std::cout};
     TransportCatalogue tc{Load(ir)};
 
-    ProcessRequest(tc, ir, parser, sr);
+    output::ProcessRequest(tc, ir, parser, sr);
 
     return 0;
 }

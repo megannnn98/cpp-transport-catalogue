@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include <deque>
+#include <list>
 #include <algorithm>
 #include "geo.h"
 
@@ -121,6 +121,6 @@ public:
     ~TransportCatalogue() = default;
 
 private:
-    std::deque<Stop> busStops{};
+    std::list<Stop> busStops{};
     std::unordered_set<Bus, Bus::Hasher> buses;
 };

@@ -54,7 +54,7 @@ public:
         os_ << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
                   << uniqCalc(bus.busStops) << " unique stops, "
-                  << std::fixed << std::setprecision(2) << distanceCalc << " route length"<< std::endl;
+                  << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
     }
 };
 
@@ -74,7 +74,7 @@ void inline ProcessRequest(TransportCatalogue& tc, input::InputReader& ir, input
         }
         if (line.find(BUS.data()) == 0)
         {
-            sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - BUS.size() + 1));
+            sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - (BUS.size() + 1)));
         }
     } // end while
     std::cout << std::endl;

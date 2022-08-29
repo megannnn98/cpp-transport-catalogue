@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stack>
 #include <string_view>
+#include <cassert>
 #include "transport_catalogue.h"
 
 namespace input {
@@ -61,19 +62,20 @@ public:
         using namespace std::literals;
         static constexpr std::string_view BUS = "Bus"sv;
         TransportCatalogue::Bus ret{};
-        busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - BUS.size() + 1);
+        busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - (BUS.size() + 1));
 
         auto semicon = busDataLine.find(':');
         if (semicon == std::string::npos)
         {
+            assert(false);
             static TransportCatalogue::Bus empty{};
             return empty;
         }
 
-        busDataLine[semicon] = ' ';
+        ret.name = busDataLine.substr(0, semicon);
+        busDataLine = busDataLine.substr(semicon + 2, busDataLine.size() - (semicon + 2));
         char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
         std::stringstream ss{busDataLine};
-        ss >> ret.name;
 
         std::string stopname{};
         std::stack<TransportCatalogue::Stop*> circleStopHolder{};
@@ -103,7 +105,7 @@ public:
         static constexpr std::string_view STOP = "Stop"sv;
         static TransportCatalogue::Stop empty{};
         TransportCatalogue::Stop ret{};
-        line = line.substr(STOP.size() + 1, line.length() - STOP.size() + 1);
+        line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
 
         auto semicon = line.rfind(':');
         if (semicon == std::string::npos) {
@@ -149,6 +151,7 @@ public:
         {
             auto stop = irp.ParseStop(line);
             if (stop.name.empty()) {
+                assert(false);
                 continue;
             }
             ret.AddBusStop(std::move(stop));
