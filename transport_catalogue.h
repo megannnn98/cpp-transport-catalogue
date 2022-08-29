@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <deque>
@@ -66,21 +67,21 @@ public:
         busStops.push_back(std::move(stop));
     }
 
-    [[nodiscard]] Bus GetBus(std::string name) const
+    [[nodiscard]] Bus GetBus(std::string_view name) const
     {
         auto it = std::find_if(buses.begin(),
                      buses.end(),
                      [&name](const Bus& bus){
             return bus.name == name;
         });
-        if (!buses.count(*it)) {
+        if (it == buses.end()) {
             static Bus bus{};
             return bus;
         }
         return *it;
     }
 
-    [[nodiscard]] Stop& GetStop(const std::string& name)
+    [[nodiscard]] Stop& GetStop(std::string_view name)
     {
         auto it = std::find_if(busStops.begin(),
                      busStops.end(),
@@ -104,7 +105,7 @@ public:
         return buses;
     }
 
-    [[nodiscard]] Coordinates& GetStopCoords(const std::string& name)
+    [[nodiscard]] Coordinates& GetStopCoords(std::string_view name)
     {
         auto it = std::find_if(busStops.begin(),
                             busStops.end(),
@@ -127,9 +128,6 @@ public:
     ~TransportCatalogue() = default;
 
 private:
-
-
-
     std::deque<Stop> busStops{};
     std::unordered_set<Bus, HasherBus> buses;
 };

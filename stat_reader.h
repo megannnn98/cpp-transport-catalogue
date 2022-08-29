@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <set>
 #include <numeric>
+#include <string_view>
 
 class StatReader
 {
@@ -28,11 +29,11 @@ public:
     using HasherStop = TransportCatalogue::HasherStop;
 
 
-    void PrintBus(std::string name)
+    void PrintBus(std::string_view name)
     {
         auto bus = tc_.GetBus(name);
         if (bus.busStops.empty()) {
-            std::cout << "Bus " << bus.name << ": " << "not found" << std::endl;
+            std::cout << "Bus " << name << ": " << "not found" << std::endl;
             return;
         }
 

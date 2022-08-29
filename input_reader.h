@@ -31,6 +31,19 @@ public:
                     s.end());
     };
 
+    std::string ReadLine() {
+      std::string s{};
+      std::getline(std::cin, s);
+      return s;
+    }
+
+    int ReadLineWithNumber() {
+      int result{};
+      std::cin >> result;
+      ReadLine();
+      return result;
+    }
+
     [[nodiscard]] TransportCatalogue::Bus ParseBus(std::string& busDataLine)
     {
         TransportCatalogue::Bus ret{};
