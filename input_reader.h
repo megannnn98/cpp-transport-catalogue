@@ -4,20 +4,43 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#include <cassert>
 #include <stack>
 #include "transport_catalogue.h"
 
 class InputReader
 {
-    TransportCatalogue& tc_;
+    std::istream& is_;
 public:
-    InputReader(TransportCatalogue& tc) : tc_{tc} {}
+    InputReader(std::istream& is) : is_{is} {}
     InputReader(const InputReader&) = delete;
     InputReader& operator=(const InputReader&) = delete;
     InputReader(InputReader&&) = default;
     InputReader& operator=(InputReader&&) = delete;
     ~InputReader() = default;
+
+    std::string ReadLine() {
+      std::string s{};
+      std::getline(is_, s);
+      return s;
+    }
+
+    int ReadLineWithNumber() {
+      int result{};
+      is_ >> result;
+      ReadLine();
+      return result;
+    }
+};
+
+class InputReadParser
+{
+public:
+    InputReadParser() = default;
+    InputReadParser(const InputReadParser&) = delete;
+    InputReadParser& operator=(const InputReadParser&) = delete;
+    InputReadParser(InputReadParser&&) = default;
+    InputReadParser& operator=(InputReadParser&&) = delete;
+    ~InputReadParser() = default;
 
     void ltrim(std::string& s) {
         s.erase(s.begin(),
@@ -31,7 +54,7 @@ public:
                     s.end());
     };
 
-    [[nodiscard]] TransportCatalogue::Bus ParseBus(std::string& busDataLine)
+    [[nodiscard]] TransportCatalogue::Bus ParseBus(TransportCatalogue& tc, std::string& busDataLine)
     {
         TransportCatalogue::Bus ret{};
         busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
@@ -54,9 +77,9 @@ public:
         {
             ltrim(stopname);
             rtrim(stopname);
-            ret.busStops.push_back(&tc_.GetStop(stopname));
+            ret.busStops.push_back(&tc.GetStop(stopname));
             if (delim == '-') {
-                circleStopHolder.push(&tc_.GetStop(stopname));
+                circleStopHolder.push(&tc.GetStop(stopname));
             }
         }
         if (!circleStopHolder.empty()) {
@@ -100,28 +123,25 @@ public:
 
 };
 
-[[nodiscard]] TransportCatalogue Load(std::istream& input)
+[[nodiscard]] inline TransportCatalogue Load(InputReader& ir)
 {
     TransportCatalogue ret{};
-    InputReader ir{ret};
+    InputReadParser irp{};
     std::string line{};
     std::vector<std::string> busDataLines{};
 
-    std::getline(input, line);
-    ir.ltrim(line);
-    ir.rtrim(line);
-    auto lineCnt = std::atoi(line.c_str());
+    auto lineCnt = ir.ReadLineWithNumber();
 
     while (lineCnt--) {
-        std::getline(input, line);
-        ir.ltrim(line);
-        ir.rtrim(line);
+        line = ir.ReadLine();
+        irp.ltrim(line);
+        irp.rtrim(line);
         if (line.length() <= 0) {
             continue;
         }
         if (line.find("Stop") == 0)
         {
-            auto stop = ir.ParseStop(line);
+            auto stop = irp.ParseStop(line);
             if (stop.name.empty()) {
                 continue;
             }
@@ -135,7 +155,7 @@ public:
 
     for(std::string& busDataLine: busDataLines )
     {
-        auto bus = ir.ParseBus(busDataLine);
+        auto bus = irp.ParseBus(ret, busDataLine);
         if (bus.busStops.empty()) {
             continue;
         }
