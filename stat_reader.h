@@ -3,7 +3,7 @@
 #include "transport_catalogue.h"
 #include "geo.h"
 #include "input_reader.h"
-#include <iostream>
+#include <ostream>
 #include <vector>
 #include <algorithm>
 #include <iomanip>
@@ -11,13 +11,14 @@
 
 class StatReader
 {
+    std::ostream& os_;
 public:
     StatReader(const StatReader&) = delete;
     StatReader& operator=(const StatReader&) = delete;
     StatReader(StatReader&&) = delete;
     StatReader& operator=(StatReader&&) = delete;
     ~StatReader() = default;
-    StatReader() = default;
+    StatReader(std::ostream& os) : os_{os} {}
 
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
@@ -27,7 +28,7 @@ public:
     {
         auto bus = tc.GetBus(name);
         if (bus.busStops.empty()) {
-            std::cout << "Bus " << name << ": " << "not found" << std::endl;
+            os_ << "Bus " << name << ": " << "not found" << std::endl;
             return;
         }
 
@@ -50,7 +51,7 @@ public:
 
 
         // Bus X: R stops on route, U unique stops, L route length
-        std::cout << "Bus " << bus.name << ": "
+        os_ << "Bus " << bus.name << ": "
                   << bus.busStops.size() << " stops on route, "
                   << uniqCalc(bus.busStops) << " unique stops, "
                   << std::setprecision(6) << distanceCalc << " route length"<< std::endl;
