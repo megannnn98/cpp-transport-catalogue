@@ -53,9 +53,5 @@ int main()
 
     ProcessRequest(tc, ir, parser, sr);
 
-    StatReader sr{tc};
-
-    sr.PrintBus("200");
-
     return 0;
 }

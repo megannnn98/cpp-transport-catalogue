@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <stack>
+#include <string_view>
 #include "transport_catalogue.h"
 
 class InputReader
@@ -14,20 +15,20 @@ public:
     InputReader(std::istream& is) : is_{is} {}
     InputReader(const InputReader&) = delete;
     InputReader& operator=(const InputReader&) = delete;
-    InputReader(InputReader&&) = default;
+    InputReader(InputReader&&) = delete;
     InputReader& operator=(InputReader&&) = delete;
     ~InputReader() = default;
 
-    std::string ReadLine() {
+    [[nodiscard]] std::string ReadLine() const {
       std::string s{};
       std::getline(is_, s);
       return s;
     }
 
-    int ReadLineWithNumber() {
+    [[nodiscard]] int ReadLineWithNumber() const {
       int result{};
       is_ >> result;
-      ReadLine();
+      std::ignore = ReadLine();
       return result;
     }
 };
@@ -38,7 +39,7 @@ public:
     InputReadParser() = default;
     InputReadParser(const InputReadParser&) = delete;
     InputReadParser& operator=(const InputReadParser&) = delete;
-    InputReadParser(InputReadParser&&) = default;
+    InputReadParser(InputReadParser&&) = delete;
     InputReadParser& operator=(InputReadParser&&) = delete;
     ~InputReadParser() = default;
 
@@ -56,8 +57,10 @@ public:
 
     [[nodiscard]] TransportCatalogue::Bus ParseBus(TransportCatalogue& tc, std::string& busDataLine)
     {
+        using namespace std::literals;
+        static constexpr std::string_view BUS = "Bus"sv;
         TransportCatalogue::Bus ret{};
-        busDataLine = busDataLine.substr(4, busDataLine.length() - 4);
+        busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - BUS.size() + 1);
 
         auto semicon = busDataLine.find(':');
         if (semicon == std::string::npos)
@@ -95,9 +98,11 @@ public:
 
     [[nodiscard]] TransportCatalogue::Stop ParseStop(std::string& line)
     {
+        using namespace std::literals;
+        static constexpr std::string_view STOP = "Stop"sv;
         static TransportCatalogue::Stop empty{};
         TransportCatalogue::Stop ret{};
-        line = line.substr(5, line.length() - 5);
+        line = line.substr(STOP.size() + 1, line.length() - STOP.size() + 1);
 
         auto semicon = line.rfind(':');
         if (semicon == std::string::npos) {

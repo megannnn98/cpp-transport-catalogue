@@ -21,6 +21,12 @@ public:
         std::string name;
         Coordinates coord;
 
+        struct Hasher {
+           size_t operator() (const Stop& stop) const {
+                return std::hash<std::string>{}(stop.name)*37 + stop.coord.lat;
+            }
+        };
+
         bool operator==(const Stop& other) const
         {
             return (name == other.name) && (coord == other.coord);
@@ -35,20 +41,15 @@ public:
         std::string name;
         std::vector<const Stop*> busStops;
 
+        struct Hasher {
+           size_t operator() (const Bus& bus) const {
+                return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
+            }
+        };
+
         bool operator==(const Bus& other) const
         {
             return (name == other.name) && (busStops == other.busStops);
-        }
-    };
-    struct HasherBus {
-       size_t operator() (const Bus& bus) const {
-            return std::hash<std::string>{}(bus.name)*37 + bus.busStops.size();
-        }
-    };
-
-    struct HasherStop {
-       size_t operator() (const Stop& stop) const {
-            return std::hash<std::string>{}(stop.name)*37 + stop.coord.lat;
         }
     };
 
@@ -127,5 +128,5 @@ public:
 
 private:
     std::deque<Stop> busStops{};
-    std::unordered_set<Bus, HasherBus> buses;
+    std::unordered_set<Bus, Bus::Hasher> buses;
 };

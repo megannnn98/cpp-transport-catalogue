@@ -22,9 +22,8 @@ public:
 
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
-    using HasherStop = TransportCatalogue::HasherStop;
 
-    void PrintBus(TransportCatalogue& tc, std::string_view name)
+    void PrintBus(TransportCatalogue& tc, std::string_view name) const
     {
         auto bus = tc.GetBus(name);
         if (bus.busStops.empty()) {
@@ -33,7 +32,7 @@ public:
         }
 
         auto uniqCalc = [](const auto& stops) ->size_t {
-            std::unordered_set<Stop, HasherStop> uniqueStops;
+            std::unordered_set<Stop, Stop::Hasher> uniqueStops;
             for (std::size_t i{}; i < stops.size(); ++i) {
                 uniqueStops.insert(*stops[i]);
             }
