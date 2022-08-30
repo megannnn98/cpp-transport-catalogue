@@ -9,7 +9,7 @@
 #include <cassert>
 #include "transport_catalogue.h"
 
-namespace input {
+namespace io {
 class InputReader
 {
     std::istream& is_;
@@ -64,16 +64,16 @@ public:
         TransportCatalogue::Bus ret{};
         busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - (BUS.size() + 1));
 
-        auto semicon = busDataLine.find(':');
-        if (semicon == std::string::npos)
+        auto colon = busDataLine.find_first_of(':');
+        if (colon == std::string::npos)
         {
             assert(false);
             static TransportCatalogue::Bus empty{};
             return empty;
         }
 
-        ret.name = busDataLine.substr(0, semicon);
-        busDataLine = busDataLine.substr(semicon + 2, busDataLine.size() - (semicon + 2));
+        ret.name = busDataLine.substr(0, colon);
+        busDataLine = busDataLine.substr(colon + 2, busDataLine.size() - (colon + 2));
         char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
         std::stringstream ss{busDataLine};
 
@@ -103,35 +103,34 @@ public:
     {
         using namespace std::literals;
         static constexpr std::string_view STOP = "Stop"sv;
-        static TransportCatalogue::Stop empty{};
+        static TransportCatalogue::Stop emptyStop{};
         TransportCatalogue::Stop ret{};
         line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
 
-        auto semicon = line.rfind(':');
+        auto semicon = line.find_first_of(':');
         if (semicon == std::string::npos) {
-            return empty;
+            assert(false);
+            return emptyStop;
         }
 
         ret.name = line.substr(0, semicon);
         line = line.substr(semicon + 1);
-        auto comma = line.find(',');
+        auto comma = line.find_first_of(',');
         if (comma == std::string::npos) {
-            return empty;
+            assert(false);
+            return emptyStop;
         }
-        line[line.find(',')] = ' ';
+        line[comma] = ' ';
         std::stringstream ss{line};
-        float tmp{};
-        ss >> tmp;
-        ret.coord.lat= tmp;
-        ss >> tmp;
-        ret.coord.lng = tmp;
+        ss >> ret.coord.lat;
+        ss >> ret.coord.lng;
 
         return ret;
     }
 
 };
 
-[[nodiscard]] inline TransportCatalogue Load(InputReader& ir)
+[[nodiscard]] inline TransportCatalogue Load(const InputReader& ir)
 {
     TransportCatalogue ret{};
     InputReadParser irp{};
@@ -166,12 +165,16 @@ public:
     {
         auto bus = irp.ParseBus(ret, busDataLine);
         if (bus.busStops.empty()) {
+            assert(false);
             continue;
         }
         ret.AddBus(std::move(bus));
     }
 
+    if (ret.GetBuses().empty() || ret.GetStops().empty())
+        std::runtime_error("buses or stops can't be empty");
+
     return ret;
 }
 
-} // namespace input
+} // namespace io

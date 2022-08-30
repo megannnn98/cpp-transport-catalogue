@@ -10,12 +10,11 @@ int main()
 {
     auto& input = std::cin;
 
-    input::InputReader ir{input};
-    input::InputReadParser parser{};
-    output::StatReader sr{std::cout};
-    TransportCatalogue tc{input::Load(ir)};
+    const io::InputReader ir{input};
+    const io::StatReader sr{std::cout};
+    const TransportCatalogue tc{io::Load(ir)};
 
-    output::ProcessRequest(tc, ir, parser, sr);
+    io::ProcessRequest(tc, ir, sr);
 
     return 0;
 }
