@@ -27,7 +27,7 @@ public:
     void PrintBus(const TransportCatalogue& tc, std::string_view name) const
     {
         auto bus = tc.GetBus(name);
-        if (bus.busStops.empty()) {
+        if (bus.stops.empty()) {
             os_ << "Bus " << name << ": " << "not found" << std::endl;
             return;
         }
@@ -41,16 +41,16 @@ public:
         };
 
         double distance{};
-        auto it = bus.busStops.begin();
-        while (it != (bus.busStops.end() - 1)) {
+        auto it = bus.stops.begin();
+        while (it != (bus.stops.end() - 1)) {
             distance += ComputeDistance((*it)->coord, (*(it+1))->coord);
             it = std::next(it);
         }
 
         // Bus X: R stops on route, U unique stops, L route length
         os_ << "Bus " << bus.name << ": "
-                  << bus.busStops.size() << " stops on route, "
-                  << uniqCalc(bus.busStops) << " unique stops, "
+                  << bus.stops.size() << " stops on route, "
+                  << uniqCalc(bus.stops) << " unique stops, "
                   << std::setprecision(6) << distance << " route length"<< std::endl;
     }
 };

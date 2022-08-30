@@ -83,7 +83,7 @@ public:
         {
             ltrim(stopname);
             rtrim(stopname);
-            ret.busStops.push_back(&tc.GetStop(stopname));
+            ret.stops.push_back(&tc.GetStop(stopname));
             if (delim == '-') {
                 circleStopHolder.push(&tc.GetStop(stopname));
             }
@@ -91,7 +91,7 @@ public:
         if (!circleStopHolder.empty()) {
             circleStopHolder.pop();
             while (!circleStopHolder.empty()) {
-                ret.busStops.push_back(circleStopHolder.top());
+                ret.stops.push_back(circleStopHolder.top());
                 circleStopHolder.pop();
             }
         }
@@ -132,7 +132,7 @@ public:
 
 [[nodiscard]] inline TransportCatalogue Load(const InputReader& ir)
 {
-    TransportCatalogue ret{};
+    TransportCatalogue tc{};
     InputReadParser irp{};
     std::string line{};
     std::vector<std::string> busDataLines{};
@@ -153,7 +153,7 @@ public:
                 assert(false);
                 continue;
             }
-            ret.AddBusStop(std::move(stop));
+            tc.AddBusStop(std::move(stop));
         }
         else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
         {
@@ -163,18 +163,18 @@ public:
 
     for(std::string& busDataLine: busDataLines )
     {
-        auto bus = irp.ParseBus(ret, busDataLine);
-        if (bus.busStops.empty()) {
+        auto bus = irp.ParseBus(tc, busDataLine);
+        if (bus.stops.empty()) {
             assert(false);
             continue;
         }
-        ret.AddBus(std::move(bus));
+        tc.AddBus(std::move(bus));
     }
 
-    if (ret.GetBuses().empty() || ret.GetStops().empty())
+    if (tc.GetBuses().empty() || tc.GetStops().empty())
         std::runtime_error("buses or stops can't be empty");
 
-    return ret;
+    return tc;
 }
 
 } // namespace io
