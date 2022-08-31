@@ -9,9 +9,10 @@
 
 class TransportCatalogue
 {
-    using StopPointersVector = std::vector<std::string_view>;
-    using BusPointersVector = std::vector<std::string_view>;
 public:
+    using StopPointersVector = std::vector<std::string_view>;
+    using BusPointersVector = std::unordered_set<std::string_view>;
+
     struct Bus;
     struct Stop
     {
@@ -71,22 +72,9 @@ public:
         buses_[busNames_.back()].second = std::move(v);
     }
 
-    void AddBusesToStop(std::string_view name, std::vector<std::string>&& buses)
+    void AddBusToStop(std::string_view name, std::string_view bus)
     {
-        auto& stop = GetStop(name);
-        BusPointersVector v{};
-        for (const auto& bus: buses)
-        {
-            auto it = std::find(busNames_.begin(),
-                                busNames_.end(),
-                                bus);
-            if (it == busNames_.end()) {
-                continue;
-            }
-            v.push_back(*it);
-        }
-        stops_[stopNames_.back()].first = stop;
-        stops_[stopNames_.back()].second = std::move(v);
+        stops_[name].second.insert(bus);
     }
 
     void AddStop(Stop& stop)

@@ -173,6 +173,15 @@ public:
         tc.AddBusAndStops(TransportCatalogue::Bus{tmp.first}, std::move(tmp.second));
     }
 
+    for (auto& busPair: tc.GetBuses())
+    {
+        std::vector<std::string_view>& stops = busPair.second.second;
+        for (std::string_view stopName: stops )
+        {
+            tc.AddBusToStop(stopName, busPair.first);
+        }
+    }
+
     if (tc.GetBuses().empty() || tc.GetStops().empty())
         std::runtime_error("buses or stops can't be empty");
 

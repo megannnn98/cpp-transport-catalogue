@@ -58,12 +58,41 @@ public:
                   << uniqCalc(stops) << " unique stops, "
                   << std::setprecision(6) << distance << " route length"<< std::endl;
     }
+
+    void PrintStop(TransportCatalogue& tc, std::string_view name) const
+    {
+        auto& stops = tc.GetStops();
+        auto it = std::find_if(stops.cbegin(),
+                               stops.cend(),
+                               [&name](const auto& p) {
+                  return p.first == name;
+              });
+        if (it == stops.end()) {
+            os_ << "Stop " << name << ": " << "not found" << std::endl;
+            return;
+        }
+
+        if (it->second.second.empty()) {
+            os_ << "Stop " << name << ": " << "no buses" << std::endl;
+            return;
+        }
+
+
+        os_ << "Stop " << name << ": buses ";
+        for (const auto& bus: it->second.second)
+        {
+            os_ << bus << " ";
+        }
+        os_ << std::endl;
+
+    }
 };
 
 void inline ProcessRequest(TransportCatalogue& tc, const InputReader& ir, const StatReader& sr)
 {
     using namespace std::literals;
     static constexpr std::string_view BUS = "Bus"sv;
+    static constexpr std::string_view STOP = "Stop"sv;
     InputReadParser parser{};
     std::string line{};
     auto lineCnt = ir.ReadLineWithNumber();
@@ -75,6 +104,10 @@ void inline ProcessRequest(TransportCatalogue& tc, const InputReader& ir, const 
         if (line.length() && !line.find(BUS.data()))
         {
             sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - (BUS.size() + 1)));
+        }
+        if (line.length() && !line.find(STOP.data()))
+        {
+            sr.PrintStop(tc, line.substr(STOP.size() + 1, line.size() - (STOP.size() + 1)));
         }
     } // end while
     std::cout << std::endl;
