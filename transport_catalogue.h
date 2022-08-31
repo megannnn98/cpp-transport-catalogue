@@ -15,7 +15,7 @@ public:
     {
         struct Hasher {
            size_t operator() (const Stop& stop) const {
-                return std::hash<std::string>{}(stop.name)*37 + stop.coord.lat;
+                return std::hash<std::string_view>{}(stop.name)*37 + stop.coord.lat;
             }
         };
 
@@ -24,70 +24,71 @@ public:
             return (name == other.name);
         }
 
-        std::string name;
+        std::string_view name;
         geo::Coordinates coord;
     };
     struct Bus
     {
-        std::string name;
-        std::vector<const Stop*> stops;
+        std::string_view name;
 
         struct Hasher {
            size_t operator() (const Bus& bus) const {
-                return std::hash<std::string>{}(bus.name)*37 + bus.stops.size();
+                return std::hash<std::string_view>{}(bus.name)*37;
             }
         };
 
         bool operator==(const Bus& other) const
         {
-            return (name == other.name) && (stops == other.stops);
+            return (name == other.name);
         }
     };
 
-    void AddBus(Bus&& other)
+    void AddBus(Bus& bus)
     {
-        if (buses_.count(other)) {
-            return;
-        }
-        buses_.insert(std::move(other));
+        busNames_.push_back(std::string{bus.name});
+        bus.name = busNames_.back();
+        buses_[busNames_.back()].first = bus;
     }
 
-    void AddBusStop(Stop&& stop)
+    void AddBusAndStops(Bus&& bus, std::vector<std::string>&& stops)
     {
-        stops_.push_back(std::move(stop));
+        busNames_.push_back(std::string{bus.name});
+        bus.name = busNames_.back();
+        std::vector<std::string*> v{};
+        for (const auto& stop: stops)
+        {
+            auto it = std::find(stopNames_.begin(),
+                                stopNames_.end(),
+                                stop);
+            if (it == stopNames_.end()) {
+                continue;
+            }
+            v.push_back(&(*it));
+        }
+        buses_[busNames_.back()].first = bus;
+        buses_[busNames_.back()].second = std::move(v);
     }
 
-    [[nodiscard]] Bus GetBus(std::string_view name) const
+    void AddStop(Stop& stop)
     {
-        auto it = std::find_if(buses_.begin(),
-                     buses_.end(),
-                     [&name](const Bus& bus){
-            return bus.name == name;
-        });
-        if (it == buses_.end()) {
-            static Bus bus{};
-            return bus;
-        }
-        return *it;
+        stopNames_.push_back(std::string{stop.name});
+        stop.name = stopNames_.back();
+        stops_[stopNames_.back()] = stop;
+    }
+
+    [[nodiscard]] Bus& GetBus(std::string_view name)
+    {
+        return buses_[name].first;
+    }
+
+    [[nodiscard]] std::vector<std::string*>& GetBusStops(std::string_view name)
+    {
+        return buses_[name].second;
     }
 
     [[nodiscard]] Stop& GetStop(std::string_view name)
     {
-        auto it = std::find_if(stops_.begin(),
-                     stops_.end(),
-                     [&name](const Stop& stop){
-            return stop.name == name;
-        });
-        if (it == stops_.end()) {
-            static Stop stop{};
-            return stop;
-        }
-        return *it;
-    }
-
-    [[nodiscard]] auto& GetStops()
-    {
-        return stops_;
+        return stops_[name];
     }
 
     [[nodiscard]] auto& GetBuses()
@@ -95,7 +96,7 @@ public:
         return buses_;
     }
 
-    [[nodiscard]] auto& GetStops() const
+    [[nodiscard]] std::unordered_map<std::string_view, Stop>& GetStops()
     {
         return stops_;
     }
@@ -107,16 +108,7 @@ public:
 
     [[nodiscard]] geo::Coordinates& GetStopCoords(std::string_view name)
     {
-        auto it = std::find_if(stops_.begin(),
-                            stops_.end(),
-                               [&name](const Stop& stop){
-            return name == stop.name;
-        });
-        if (it == stops_.end()) {
-            static geo::Coordinates coord{};
-            return coord;
-        }
-        return it->coord;
+        return stops_[name].coord;
     }
 
 
@@ -128,6 +120,12 @@ public:
     ~TransportCatalogue() = default;
 
 private:
-    std::list<Stop> stops_{};
-    std::unordered_set<Bus, Bus::Hasher> buses_;
+
+    using StopPointersVector = std::vector<std::string*>;
+    using BusPointersVector = std::vector<std::string*>;
+
+    std::list<std::string> stopNames_{};
+    std::unordered_map<std::string_view, Stop> stops_{};
+    std::list<std::string> busNames_{};
+    std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_;
 };

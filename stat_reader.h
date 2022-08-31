@@ -24,38 +24,43 @@ public:
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
 
-    void PrintBus(const TransportCatalogue& tc, std::string_view name) const
+    void PrintBus(TransportCatalogue& tc, std::string_view name) const
     {
         auto bus = tc.GetBus(name);
-        if (bus.stops.empty()) {
+        auto stops = tc.GetBusStops(name);
+        if (stops.empty()) {
             os_ << "Bus " << name << ": " << "not found" << std::endl;
             return;
         }
 
-        auto uniqCalc = [](const auto& stops) ->size_t {
-            std::unordered_set<Stop, Stop::Hasher> uniqueStops;
-            for (std::size_t i{}; i < stops.size(); ++i) {
-                uniqueStops.insert(*stops[i]);
-            }
+        auto uniqCalc = [](const std::vector<std::string*>& stops) ->size_t {
+            std::unordered_set<std::string_view> uniqueStops{};
+            std::for_each(stops.cbegin(),
+                          stops.cend(),
+                          [&uniqueStops](const std::string* stop){
+                uniqueStops.insert(*stop);
+            });
             return uniqueStops.size();
         };
 
         double distance{};
-        auto it = bus.stops.begin();
-        while (it != (bus.stops.end() - 1)) {
-            distance += ComputeDistance((*it)->coord, (*(it+1))->coord);
+        std::vector<std::string*>::iterator it = stops.begin();
+        while (it != (stops.end() - 1)) {
+            auto coords1 = tc.GetStopCoords(**it);
+            auto coords2 = tc.GetStopCoords(**(std::next(it)));
+            distance += ComputeDistance(coords1, coords2);
             it = std::next(it);
         }
 
         // Bus X: R stops on route, U unique stops, L route length
         os_ << "Bus " << bus.name << ": "
-                  << bus.stops.size() << " stops on route, "
-                  << uniqCalc(bus.stops) << " unique stops, "
+                  << stops.size() << " stops on route, "
+                  << uniqCalc(stops) << " unique stops, "
                   << std::setprecision(6) << distance << " route length"<< std::endl;
     }
 };
 
-void inline ProcessRequest(const TransportCatalogue& tc, const InputReader& ir, const StatReader& sr)
+void inline ProcessRequest(TransportCatalogue& tc, const InputReader& ir, const StatReader& sr)
 {
     using namespace std::literals;
     static constexpr std::string_view BUS = "Bus"sv;

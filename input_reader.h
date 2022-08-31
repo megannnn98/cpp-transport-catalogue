@@ -57,41 +57,41 @@ public:
                     s.end());
     };
 
-    [[nodiscard]] TransportCatalogue::Bus ParseBus(TransportCatalogue& tc, std::string& busDataLine)
+    [[nodiscard]] std::pair<std::string, std::vector<std::string>> ParseBus(std::string& busDataLine)
     {
         using namespace std::literals;
         static constexpr std::string_view BUS = "Bus"sv;
-        TransportCatalogue::Bus ret{};
+        std::pair<std::string, std::vector<std::string>> ret{};
         busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - (BUS.size() + 1));
 
         auto colon = busDataLine.find_first_of(':');
         if (colon == std::string::npos)
         {
             assert(false);
-            static TransportCatalogue::Bus empty{};
+            static std::pair<std::string, std::vector<std::string>> empty{};
             return empty;
         }
 
-        ret.name = busDataLine.substr(0, colon);
+        ret.first = busDataLine.substr(0, colon);
         busDataLine = busDataLine.substr(colon + 2, busDataLine.size() - (colon + 2));
         char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
         std::stringstream ss{busDataLine};
 
         std::string stopname{};
-        std::stack<TransportCatalogue::Stop*> circleStopHolder{};
+        std::stack<std::string> circleStopHolder{};
         while (std::getline(ss, stopname, delim))
         {
             ltrim(stopname);
             rtrim(stopname);
-            ret.stops.push_back(&tc.GetStop(stopname));
+            ret.second.push_back(stopname);
             if (delim == '-') {
-                circleStopHolder.push(&tc.GetStop(stopname));
+                circleStopHolder.push(stopname);
             }
         }
         if (!circleStopHolder.empty()) {
             circleStopHolder.pop();
             while (!circleStopHolder.empty()) {
-                ret.stops.push_back(circleStopHolder.top());
+                ret.second.push_back(circleStopHolder.top());
                 circleStopHolder.pop();
             }
         }
@@ -99,12 +99,12 @@ public:
         return ret;
     }
 
-    [[nodiscard]] TransportCatalogue::Stop ParseStop(std::string& line)
+    [[nodiscard]] std::pair<std::string, geo::Coordinates> ParseStop(std::string& line)
     {
         using namespace std::literals;
         static constexpr std::string_view STOP = "Stop"sv;
-        static TransportCatalogue::Stop emptyStop{};
-        TransportCatalogue::Stop ret{};
+        static std::pair<std::string, geo::Coordinates> emptyStop{};
+        std::pair<std::string, geo::Coordinates> ret{};
         line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
 
         auto semicon = line.find_first_of(':');
@@ -113,7 +113,7 @@ public:
             return emptyStop;
         }
 
-        ret.name = line.substr(0, semicon);
+        ret.first = line.substr(0, semicon);
         line = line.substr(semicon + 1);
         auto comma = line.find_first_of(',');
         if (comma == std::string::npos) {
@@ -122,8 +122,8 @@ public:
         }
         line[comma] = ' ';
         std::stringstream ss{line};
-        ss >> ret.coord.lat;
-        ss >> ret.coord.lng;
+        ss >> ret.second.lat;
+        ss >> ret.second.lng;
 
         return ret;
     }
@@ -148,12 +148,13 @@ public:
         }
         if (line.find("Stop") == 0)
         {
-            auto stop = irp.ParseStop(line);
-            if (stop.name.empty()) {
+            auto tmp{irp.ParseStop(line)};
+            if (tmp.first.empty()) {
                 assert(false);
                 continue;
             }
-            tc.AddBusStop(std::move(stop));
+            TransportCatalogue::Stop stop{tmp.first, tmp.second};
+            tc.AddStop(stop);
         }
         else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
         {
@@ -163,12 +164,13 @@ public:
 
     for(std::string& busDataLine: busDataLines )
     {
-        auto bus = irp.ParseBus(tc, busDataLine);
-        if (bus.stops.empty()) {
+        auto tmp{irp.ParseBus(busDataLine)};
+        if (tmp.second.empty()) {
             assert(false);
             continue;
         }
-        tc.AddBus(std::move(bus));
+
+        tc.AddBusAndStops(TransportCatalogue::Bus{tmp.first}, std::move(tmp.second));
     }
 
     if (tc.GetBuses().empty() || tc.GetStops().empty())
