@@ -16,12 +16,6 @@ public:
 
     struct Stop
     {
-        struct Hasher {
-           size_t operator() (const Stop& stop) const {
-                return std::hash<std::string_view>{}(stop.name)*37 + stop.coord.lat;
-            }
-        };
-
         bool operator==(const Stop& other) const
         {
             return (name == other.name);
@@ -74,9 +68,19 @@ public:
         return buses_[name].first;
     }
 
+    [[nodiscard]] const Bus& GetBus(std::string_view name) const
+    {
+        return buses_.at(name).first;
+    }
+
     [[nodiscard]] std::vector<std::string_view>& GetBusStops(std::string_view name)
     {
         return buses_[name].second;
+    }
+
+    [[nodiscard]] const std::vector<std::string_view>& GetBusStops(std::string_view name) const
+    {
+        return buses_.at(name).second;
     }
 
     [[nodiscard]] Stop& GetStop(std::string_view name)
@@ -84,7 +88,17 @@ public:
         return stops_[name].first;
     }
 
+    [[nodiscard]] const Stop& GetStop(std::string_view name) const
+    {
+        return stops_.at(name).first;
+    }
+
     [[nodiscard]] auto& GetBuses()
+    {
+        return buses_;
+    }
+
+    [[nodiscard]] auto& GetBuses() const
     {
         return buses_;
     }
@@ -94,9 +108,9 @@ public:
         return stops_;
     }
 
-    [[nodiscard]] auto& GetBuses() const
+    [[nodiscard]] auto& GetStops() const
     {
-        return buses_;
+        return stops_;
     }
 
     [[nodiscard]] geo::Coordinates& GetStopCoords(std::string_view name)
@@ -104,6 +118,10 @@ public:
         return stops_[name].first.coord;
     }
 
+    [[nodiscard]] const geo::Coordinates& GetStopCoords(std::string_view name) const
+    {
+        return stops_.at(name).first.coord;
+    }
 
     TransportCatalogue() = default;
     TransportCatalogue(const TransportCatalogue&) = delete;

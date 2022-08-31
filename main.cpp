@@ -12,7 +12,7 @@ int main()
 
     const io::InputReader ir{input};
     const io::StatReader sr{std::cout};
-    TransportCatalogue tc{io::Load(ir)};
+    const TransportCatalogue tc{io::Load(ir)};
 
     io::ProcessRequest(tc, ir, sr);
 

@@ -24,7 +24,7 @@ public:
     using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
 
-    void PrintBus(TransportCatalogue& tc, std::string_view name) const
+    void PrintBus(const TransportCatalogue& tc, std::string_view name) const
     {
         auto bus = tc.GetBus(name);
         auto stops = tc.GetBusStops(name);
@@ -59,7 +59,7 @@ public:
                   << std::setprecision(6) << distance << " route length"<< std::endl;
     }
 
-    void PrintStop(TransportCatalogue& tc, std::string_view name) const
+    void PrintStop(const TransportCatalogue& tc, std::string_view name) const
     {
         auto& stops = tc.GetStops();
         auto it = std::find_if(stops.cbegin(),
@@ -88,7 +88,7 @@ public:
     }
 };
 
-void inline ProcessRequest(TransportCatalogue& tc, const InputReader& ir, const StatReader& sr)
+void inline ProcessRequest(const TransportCatalogue& tc, const InputReader& ir, const StatReader& sr)
 {
     using namespace std::literals;
     static constexpr std::string_view BUS = "Bus"sv;
