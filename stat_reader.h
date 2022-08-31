@@ -33,21 +33,21 @@ public:
             return;
         }
 
-        auto uniqCalc = [](const std::vector<std::string*>& stops) ->size_t {
+        auto uniqCalc = [](const std::vector<std::string_view>& stops) ->size_t {
             std::unordered_set<std::string_view> uniqueStops{};
             std::for_each(stops.cbegin(),
                           stops.cend(),
-                          [&uniqueStops](const std::string* stop){
-                uniqueStops.insert(*stop);
+                          [&uniqueStops](const std::string_view stop){
+                uniqueStops.insert(stop);
             });
             return uniqueStops.size();
         };
 
         double distance{};
-        std::vector<std::string*>::iterator it = stops.begin();
+        std::vector<std::string_view>::iterator it = stops.begin();
         while (it != (stops.end() - 1)) {
-            auto coords1 = tc.GetStopCoords(**it);
-            auto coords2 = tc.GetStopCoords(**(std::next(it)));
+            auto coords1 = tc.GetStopCoords(*it);
+            auto coords2 = tc.GetStopCoords(*(std::next(it)));
             distance += ComputeDistance(coords1, coords2);
             it = std::next(it);
         }

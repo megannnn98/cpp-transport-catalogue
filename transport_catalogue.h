@@ -9,8 +9,8 @@
 
 class TransportCatalogue
 {
-    using StopPointersVector = std::vector<std::string*>;
-    using BusPointersVector = std::vector<std::string*>;
+    using StopPointersVector = std::vector<std::string_view>;
+    using BusPointersVector = std::vector<std::string_view>;
 public:
     struct Bus;
     struct Stop
@@ -65,7 +65,7 @@ public:
             if (it == stopNames_.end()) {
                 continue;
             }
-            v.push_back(&(*it));
+            v.push_back(*it);
         }
         buses_[busNames_.back()].first = bus;
         buses_[busNames_.back()].second = std::move(v);
@@ -83,8 +83,10 @@ public:
             if (it == busNames_.end()) {
                 continue;
             }
-            v.push_back(&(*it));
+            v.push_back(*it);
         }
+        stops_[stopNames_.back()].first = stop;
+        stops_[stopNames_.back()].second = std::move(v);
     }
 
     void AddStop(Stop& stop)
@@ -99,7 +101,7 @@ public:
         return buses_[name].first;
     }
 
-    [[nodiscard]] std::vector<std::string*>& GetBusStops(std::string_view name)
+    [[nodiscard]] std::vector<std::string_view>& GetBusStops(std::string_view name)
     {
         return buses_[name].second;
     }
@@ -142,5 +144,5 @@ private:
     std::list<std::string> stopNames_{};
     std::unordered_map<std::string_view, std::pair<Stop, BusPointersVector>> stops_{};
     std::list<std::string> busNames_{};
-    std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_;
+    std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_{};
 };
