@@ -9,6 +9,8 @@
 
 class TransportCatalogue
 {
+    using StopPointersVector = std::vector<std::string*>;
+    using BusPointersVector = std::vector<std::string*>;
 public:
     struct Bus;
     struct Stop
@@ -54,7 +56,7 @@ public:
     {
         busNames_.push_back(std::string{bus.name});
         bus.name = busNames_.back();
-        std::vector<std::string*> v{};
+        StopPointersVector v{};
         for (const auto& stop: stops)
         {
             auto it = std::find(stopNames_.begin(),
@@ -69,11 +71,27 @@ public:
         buses_[busNames_.back()].second = std::move(v);
     }
 
+    void AddBusesToStop(std::string_view name, std::vector<std::string>&& buses)
+    {
+        auto& stop = GetStop(name);
+        BusPointersVector v{};
+        for (const auto& bus: buses)
+        {
+            auto it = std::find(busNames_.begin(),
+                                busNames_.end(),
+                                bus);
+            if (it == busNames_.end()) {
+                continue;
+            }
+            v.push_back(&(*it));
+        }
+    }
+
     void AddStop(Stop& stop)
     {
         stopNames_.push_back(std::string{stop.name});
         stop.name = stopNames_.back();
-        stops_[stopNames_.back()] = stop;
+        stops_[stopNames_.back()].first = stop;
     }
 
     [[nodiscard]] Bus& GetBus(std::string_view name)
@@ -88,7 +106,7 @@ public:
 
     [[nodiscard]] Stop& GetStop(std::string_view name)
     {
-        return stops_[name];
+        return stops_[name].first;
     }
 
     [[nodiscard]] auto& GetBuses()
@@ -96,7 +114,7 @@ public:
         return buses_;
     }
 
-    [[nodiscard]] std::unordered_map<std::string_view, Stop>& GetStops()
+    [[nodiscard]] auto& GetStops()
     {
         return stops_;
     }
@@ -108,7 +126,7 @@ public:
 
     [[nodiscard]] geo::Coordinates& GetStopCoords(std::string_view name)
     {
-        return stops_[name].coord;
+        return stops_[name].first.coord;
     }
 
 
@@ -121,11 +139,8 @@ public:
 
 private:
 
-    using StopPointersVector = std::vector<std::string*>;
-    using BusPointersVector = std::vector<std::string*>;
-
     std::list<std::string> stopNames_{};
-    std::unordered_map<std::string_view, Stop> stops_{};
+    std::unordered_map<std::string_view, std::pair<Stop, BusPointersVector>> stops_{};
     std::list<std::string> busNames_{};
     std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_;
 };
