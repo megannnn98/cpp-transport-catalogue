@@ -53,7 +53,7 @@ public:
         }
 
         // Bus X: R stops on route, U unique stops, L route length
-        os_ << "Bus " << bus.name << ": "
+        os_ << "Bus " << bus << ": "
                   << stops.size() << " stops on route, "
                   << uniqCalc(stops) << " unique stops, "
                   << std::setprecision(6) << distance << " route length"<< std::endl;

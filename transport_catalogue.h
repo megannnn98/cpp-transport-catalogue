@@ -12,8 +12,8 @@ class TransportCatalogue
 public:
     using StopPointersVector = std::vector<std::string_view>;
     using BusPointersVector = std::unordered_set<std::string_view>;
+    using Bus = std::string_view;
 
-    struct Bus;
     struct Stop
     {
         struct Hasher {
@@ -30,33 +30,18 @@ public:
         std::string_view name;
         geo::Coordinates coord;
     };
-    struct Bus
-    {
-        std::string_view name;
-
-        struct Hasher {
-           size_t operator() (const Bus& bus) const {
-                return std::hash<std::string_view>{}(bus.name)*37;
-            }
-        };
-
-        bool operator==(const Bus& other) const
-        {
-            return (name == other.name);
-        }
-    };
 
     void AddBus(Bus& bus)
     {
-        busNames_.push_back(std::string{bus.name});
-        bus.name = busNames_.back();
+        busNames_.push_back(std::string{bus});
+        bus = busNames_.back();
         buses_[busNames_.back()].first = bus;
     }
 
     void AddBusAndStops(Bus&& bus, std::vector<std::string>&& stops)
     {
-        busNames_.push_back(std::string{bus.name});
-        bus.name = busNames_.back();
+        busNames_.push_back(std::string{bus});
+        bus = busNames_.back();
         StopPointersVector v{};
         for (const auto& stop: stops)
         {
