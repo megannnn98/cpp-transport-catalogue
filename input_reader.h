@@ -121,19 +121,11 @@ public:
             return emptyStop;
         }
         line[comma] = ' ';
+
         std::stringstream ss{line};
         ss >> ret.second.lat >> ret.second.lng;
 
-        line.clear();
-        line.append(ret.first + " "s);
-        std::string s{};
-        ss >> s;
-        while(!s.empty())
-        {
-            line.append(s + " "s);
-            s.clear();
-            ss >> s;
-        }
+        line = ret.first + ": "s + line.substr(line.find(',') + 1);
 
         return ret;
     }
@@ -145,8 +137,8 @@ public:
         static constexpr const unsigned MIN_LINE_LEN = 2U;
         TransportCatalogue::RetParseDistancesBetween ret{};
         std::string dataLine{};
-        std::string nameA{line.substr(0, line.find_first_of(',') - 1)};
-        line = line.substr(nameA.size());
+        std::string nameA{line.substr(0, line.find_first_of(':'))};
+        line = line.substr(nameA.size() + 2);
         std::stringstream ss{line};
 
         while (std::getline(ss, dataLine, ','))
@@ -181,9 +173,7 @@ public:
         line = ir.ReadLine();
         irp.ltrim(line);
         irp.rtrim(line);
-        if (line.length() <= 0) {
-            continue;
-        }
+
         if (line.find("Stop") == 0)
         {
             TransportCatalogue::RetParseStop tmp{irp.ParseStop(line)};
