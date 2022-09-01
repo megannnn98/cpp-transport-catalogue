@@ -77,9 +77,13 @@ public:
             return;
         }
 
+        std::vector<std::string_view> vv{it->second.second.begin(),
+                                         it->second.second.end()};
+
+        std::sort(vv.begin(), vv.end());
 
         os_ << "Stop " << name << ": buses ";
-        for (const auto& bus: it->second.second)
+        for (const auto& bus: vv)
         {
             os_ << bus << " ";
         }
