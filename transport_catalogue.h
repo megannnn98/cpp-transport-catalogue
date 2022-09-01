@@ -122,55 +122,57 @@ public:
         });
         auto& stopA = itA->second.first;
         auto& stopB = itB->second.first;
-        auto d = std::make_pair(&stopA, &stopB);
+        auto d1 = std::make_pair(&stopA, &stopB);
+        auto d2 = std::make_pair(&stopB, &stopA);
 
-        return distances_.count(d) ? distances_.at(d) : 0;
+        return distances_.count(d1) ? distances_.at(d1) :
+                                      distances_.count(d2) ? distances_.at(d2) : 0UL;
     }
 
-    [[nodiscard]] Bus& GetBus(std::string_view name)
+    [[nodiscard]] Bus& GetBus(std::string_view busName)
     {
-        if (!stops_.count(name)) {
+        if (!buses_.count(busName)) {
             static Bus empty{};
             return empty;
         }
-        return buses_[name].first;
+        return buses_[busName].first;
     }
 
-    [[nodiscard]] const Bus& GetBus(std::string_view name) const
+    [[nodiscard]] const Bus& GetBus(std::string_view busName) const
     {
-        if (!stops_.count(name)) {
+        if (!buses_.count(busName)) {
             static Bus empty{};
             return empty;
         }
-        return buses_.at(name).first;
+        return buses_.at(busName).first;
     }
 
-    [[nodiscard]] std::vector<std::string_view>& GetBusStops(std::string_view name)
+    [[nodiscard]] std::vector<std::string_view>& GetBusStops(std::string_view busName)
     {
-        if (!buses_.count(name)) {
+        if (!buses_.count(busName)) {
             static std::vector<std::string_view> empty{};
             return empty;
         }
-        return buses_[name].second;
+        return buses_[busName].second;
     }
 
-    [[nodiscard]] const std::vector<std::string_view>& GetBusStops(std::string_view name) const
+    [[nodiscard]] const std::vector<std::string_view>& GetBusStops(std::string_view busName) const
     {
-        if (!buses_.count(name)) {
+        if (!buses_.count(busName)) {
             static std::vector<std::string_view> empty{};
             return empty;
         }
-        return buses_.at(name).second;
+        return buses_.at(busName).second;
     }
 
-    [[nodiscard]] Stop& GetStop(std::string_view name)
+    [[nodiscard]] Stop& GetStop(std::string_view stopName)
     {
-        return stops_[name].first;
+        return stops_[stopName].first;
     }
 
-    [[nodiscard]] const Stop& GetStop(std::string_view name) const
+    [[nodiscard]] const Stop& GetStop(std::string_view stopName) const
     {
-        return stops_.at(name).first;
+        return stops_.at(stopName).first;
     }
 
     [[nodiscard]] auto& GetBuses()

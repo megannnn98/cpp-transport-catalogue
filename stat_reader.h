@@ -43,20 +43,29 @@ public:
             return uniqueStops.size();
         };
 
-        double distance{};
+        double directDistance{};
+        double realDistance{};
+        double curvature{};
         std::vector<std::string_view>::iterator it = stops.begin();
         while (it != (stops.end() - 1)) {
             auto coords1 = tc.GetStopCoords(*it);
             auto coords2 = tc.GetStopCoords(*(std::next(it)));
-            distance += ComputeDistance(coords1, coords2);
+
+            directDistance += ComputeDistance(coords1, coords2);
+
+            const auto delta = tc.GetDistanceBetween(*it, *(std::next(it)));
+            realDistance += delta ? delta : directDistance;
+
             it = std::next(it);
         }
+        curvature = realDistance / directDistance;
 
-        // Bus X: R stops on route, U unique stops, L route length
+//        Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature
         os_ << "Bus " << bus << ": "
                   << stops.size() << " stops on route, "
                   << uniqCalc(stops) << " unique stops, "
-                  << std::setprecision(6) << distance << " route length"<< std::endl;
+                  << std::setprecision(6) << realDistance << " route length, "
+                  << curvature << " curvature" << std::endl;
     }
 
     void PrintStop(const TransportCatalogue& tc, std::string_view name) const
