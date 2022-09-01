@@ -57,7 +57,7 @@ public:
                     s.end());
     };
 
-    [[nodiscard]] std::pair<std::string, std::vector<std::string>> ParseBus(std::string& busDataLine)
+    [[nodiscard]] TransportCatalogue::RetParseBus ParseBus(std::string& busDataLine)
     {
         using namespace std::literals;
         static constexpr std::string_view BUS = "Bus"sv;
@@ -99,11 +99,11 @@ public:
         return ret;
     }
 
-    [[nodiscard]] std::pair<std::string, geo::Coordinates> ParseStop(std::string& line)
+    [[nodiscard]] TransportCatalogue::RetParseStop ParseStop(std::string& line)
     {
         using namespace std::literals;
         static constexpr std::string_view STOP = "Stop"sv;
-        static std::pair<std::string, geo::Coordinates> emptyStop{};
+        static TransportCatalogue::RetParseStop emptyStop{};
         std::pair<std::string, geo::Coordinates> ret{};
         line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
 
@@ -122,8 +122,7 @@ public:
         }
         line[comma] = ' ';
         std::stringstream ss{line};
-        ss >> ret.second.lat;
-        ss >> ret.second.lng;
+        ss >> ret.second.lat >> ret.second.lng;
 
         line.clear();
         line.append(ret.first + " "s);
@@ -142,6 +141,8 @@ public:
     [[nodiscard]] TransportCatalogue::RetParseDistancesBetween ParseDistancesBetween(std::string& line)
     {
         using namespace std::literals;
+        static constexpr std::string_view TO = "to "sv;
+        static constexpr const unsigned MIN_LINE_LEN = 2U;
         TransportCatalogue::RetParseDistancesBetween ret{};
         std::string dataLine{};
         std::string nameA{line.substr(0, line.find_first_of(',') - 1)};
@@ -150,14 +151,14 @@ public:
 
         while (std::getline(ss, dataLine, ','))
         {
-            if (dataLine.size() < 7U)
+            if (dataLine.size() < MIN_LINE_LEN )
                 continue;
             ltrim(dataLine);
             rtrim(dataLine);
             TransportCatalogue::RetParseDistancesBetweenElement el{};
 
-            std::get<2>(el) = std::stod(dataLine.substr(0, dataLine.find('m')));
-            std::get<1>(el) = dataLine.substr(dataLine.find("to ") + 3);
+            std::get<2>(el) = std::stoul(dataLine.substr(0, dataLine.find('m')));
+            std::get<1>(el) = dataLine.substr(dataLine.find(TO.data()) + TO.size());
             std::get<0>(el) = nameA;
 
             ret.push_back(el);
@@ -185,14 +186,9 @@ public:
         }
         if (line.find("Stop") == 0)
         {
-            auto tmp{irp.ParseStop(line)};
+            TransportCatalogue::RetParseStop tmp{irp.ParseStop(line)};
             stopDataLines.push_back(std::move(line));
-            if (tmp.first.empty()) {
-                assert(false);
-                continue;
-            }
-            TransportCatalogue::Stop stop{tmp.first, tmp.second};
-            tc.AddStop(stop);
+            tc.AddStop(std::move(tmp));
         }
         else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))
         {
@@ -203,12 +199,7 @@ public:
     auto busLinesProcessing = [&busDataLines, &irp, &tc]{
         for(std::string& busDataLine: busDataLines )
         {
-            auto tmp{irp.ParseBus(busDataLine)};
-            if (tmp.second.empty()) {
-                assert(false);
-                continue;
-            }
-
+            TransportCatalogue::RetParseBus tmp{irp.ParseBus(busDataLine)};
             tc.AddBusAndStops(TransportCatalogue::Bus{tmp.first}, std::move(tmp.second));
         }
     };

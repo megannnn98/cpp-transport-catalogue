@@ -18,6 +18,8 @@ public:
     using RetParseDistancesBetweenElement = std::tuple<std::string, std::string, std::uint32_t>;
     using RetParseDistancesBetween = std::vector<RetParseDistancesBetweenElement>;
     using DistanceBetween = std::pair<const Stop*, const Stop*>;
+    using RetParseBus = std::pair<std::string, std::vector<std::string>>;
+    using RetParseStop = std::pair<std::string, geo::Coordinates>;
 
     struct Stop
     {
@@ -77,7 +79,11 @@ public:
         stops_[stopNames_.back()].first = stop;
     }
 
-
+    void AddStop(RetParseStop&& stop)
+    {
+        stopNames_.push_back(std::move(stop.first));
+        stops_[stopNames_.back()].first = Stop{stopNames_.back(), std::move(stop.second)};
+    }
 
     void AddDistances(const RetParseDistancesBetween& dbs)
     {
@@ -85,8 +91,8 @@ public:
         {
             const std::string& nameA = std::get<0>(db);
             const std::string& nameB = std::get<1>(db);
-            assert (stops_.count(nameA));
-            assert (stops_.count(nameB));
+//            assert (stops_.count(nameA));
+//            assert (stops_.count(nameB));
 
             auto itA = std::find_if(stops_.begin(),
                                     stops_.end(),
@@ -108,8 +114,8 @@ public:
 
     std::uint32_t GetDistanceBetween(std::string_view nameA, std::string_view nameB) const
     {
-        assert (stops_.count(nameA));
-        assert (stops_.count(nameB));
+//        assert (stops_.count(nameA));
+//        assert (stops_.count(nameB));
         auto itA = std::find_if(stops_.begin(),
                                 stops_.end(),
                                 [&nameA](const auto& stop){

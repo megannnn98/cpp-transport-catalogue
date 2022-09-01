@@ -48,8 +48,8 @@ public:
         double curvature{};
         std::vector<std::string_view>::iterator it = stops.begin();
         while (it != (stops.end() - 1)) {
-            auto coords1 = tc.GetStopCoords(*it);
-            auto coords2 = tc.GetStopCoords(*(std::next(it)));
+            auto& coords1 = tc.GetStopCoords(*it);
+            auto& coords2 = tc.GetStopCoords(*(std::next(it)));
 
             directDistance += ComputeDistance(coords1, coords2);
 
@@ -64,8 +64,8 @@ public:
         os_ << "Bus " << bus << ": "
                   << stops.size() << " stops on route, "
                   << uniqCalc(stops) << " unique stops, "
-                  << std::setprecision(6) << realDistance << " route length, "
-                  << curvature << " curvature" << std::endl;
+                  << realDistance << " route length, "
+                  << std::setprecision(6) << curvature << " curvature" << std::endl;
     }
 
     void PrintStop(const TransportCatalogue& tc, std::string_view name) const
