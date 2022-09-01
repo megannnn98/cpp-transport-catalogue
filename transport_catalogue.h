@@ -23,6 +23,7 @@ public:
 
         std::string_view name;
         geo::Coordinates coord;
+        std::unordered_map<std::string_view, double>;
     };
 
     void AddBus(Bus& bus)

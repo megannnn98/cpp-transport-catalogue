@@ -128,6 +128,36 @@ public:
         return ret;
     }
 
+    using StopParseRetType = std::tuple<std::string, geo::Coordinates, std::unordered_map<std::string_view, double>>;
+
+    [[nodiscard]] StopParseRetType ParseStopWithDistances(std::string& line)
+    {
+        using namespace std::literals;
+        static constexpr std::string_view STOP = "Stop"sv;
+        static StopParseRetType emptyStop{};
+        StopParseRetType ret{};
+        line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
+
+        auto semicon = line.find_first_of(':');
+        if (semicon == std::string::npos) {
+            assert(false);
+            return emptyStop;
+        }
+
+        std::get<0>(ret) = line.substr(0, semicon);
+        line = line.substr(semicon + 1);
+        auto comma = line.find_first_of(',');
+        if (comma == std::string::npos) {
+            assert(false);
+            return emptyStop;
+        }
+        line[comma] = ' ';
+        std::stringstream ss{line};
+        ss >> std::get<1>(ret).lat;
+        ss >> std::get<1>(ret).lng;
+
+        return ret;
+    }
 };
 
 [[nodiscard]] inline TransportCatalogue Load(const InputReader& ir)
@@ -136,6 +166,7 @@ public:
     InputReadParser irp{};
     std::string line{};
     std::vector<std::string> busDataLines{};
+    std::vector<std::string> stopDataLines{};
 
     auto lineCnt = ir.ReadLineWithNumber();
 
@@ -148,6 +179,7 @@ public:
         }
         if (line.find("Stop") == 0)
         {
+            stopDataLines.push_back(line);
             auto tmp{irp.ParseStop(line)};
             if (tmp.first.empty()) {
                 assert(false);
@@ -162,25 +194,45 @@ public:
         }
     } // end while
 
-    for(std::string& busDataLine: busDataLines )
+    auto busLinesProcessing = [&busDataLines, &irp, &tc]{
+        for(std::string& busDataLine: busDataLines )
+        {
+            auto tmp{irp.ParseBus(busDataLine)};
+            if (tmp.second.empty()) {
+                assert(false);
+                continue;
+            }
+
+            tc.AddBusAndStops(TransportCatalogue::Bus{tmp.first}, std::move(tmp.second));
+        }
+    };
+
+    auto addBusesToStops = [&tc]{
+        for (auto& busPair: tc.GetBuses())
+        {
+            std::vector<std::string_view>& stops = busPair.second.second;
+            for (std::string_view stopName: stops )
+            {
+                tc.AddBusToStop(stopName, busPair.first);
+            }
+        }
+    };
+
+    busLinesProcessing();
+    addBusesToStops();
+
+    for(std::string& stopDataLine: stopDataLines )
     {
-        auto tmp{irp.ParseBus(busDataLine)};
-        if (tmp.second.empty()) {
+        auto tmp{irp.ParseStopWithDistances(stopDataLine)};
+        if (tmp.first.empty()) {
             assert(false);
             continue;
         }
-
-        tc.AddBusAndStops(TransportCatalogue::Bus{tmp.first}, std::move(tmp.second));
+        TransportCatalogue::Stop stop{tmp.first, tmp.second};
+        tc.AddStop(stop);
     }
 
-    for (auto& busPair: tc.GetBuses())
-    {
-        std::vector<std::string_view>& stops = busPair.second.second;
-        for (std::string_view stopName: stops )
-        {
-            tc.AddBusToStop(stopName, busPair.first);
-        }
-    }
+
 
     if (tc.GetBuses().empty() || tc.GetStops().empty())
         std::runtime_error("buses or stops can't be empty");
