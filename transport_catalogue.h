@@ -106,23 +106,60 @@ public:
         }
     }
 
+    std::uint32_t GetDistanceBetween(std::string_view nameA, std::string_view nameB) const
+    {
+        assert (stops_.count(nameA));
+        assert (stops_.count(nameB));
+        auto itA = std::find_if(stops_.begin(),
+                                stops_.end(),
+                                [&nameA](const auto& stop){
+            return nameA == stop.first;
+        });
+        auto itB = std::find_if(stops_.begin(),
+                                stops_.end(),
+                                [&nameB](const auto& stop){
+            return nameB == stop.first;
+        });
+        auto& stopA = itA->second.first;
+        auto& stopB = itB->second.first;
+        auto d = std::make_pair(&stopA, &stopB);
+
+        return distances_.count(d) ? distances_.at(d) : 0;
+    }
+
     [[nodiscard]] Bus& GetBus(std::string_view name)
     {
+        if (!stops_.count(name)) {
+            static Bus empty{};
+            return empty;
+        }
         return buses_[name].first;
     }
 
     [[nodiscard]] const Bus& GetBus(std::string_view name) const
     {
+        if (!stops_.count(name)) {
+            static Bus empty{};
+            return empty;
+        }
         return buses_.at(name).first;
     }
 
     [[nodiscard]] std::vector<std::string_view>& GetBusStops(std::string_view name)
     {
+        if (!buses_.count(name)) {
+            static std::vector<std::string_view> empty{};
+            return empty;
+        }
         return buses_[name].second;
     }
 
     [[nodiscard]] const std::vector<std::string_view>& GetBusStops(std::string_view name) const
     {
+        if (!buses_.count(name)) {
+            static std::vector<std::string_view> empty{};
+            return empty;
+        }
         return buses_.at(name).second;
     }
 
