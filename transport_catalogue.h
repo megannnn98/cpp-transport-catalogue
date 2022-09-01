@@ -5,14 +5,19 @@
 #include <unordered_set>
 #include <list>
 #include <algorithm>
+#include <cassert>
 #include "geo.h"
 
 class TransportCatalogue
 {
 public:
+    struct Stop;
     using StopPointersVector = std::vector<std::string_view>;
     using BusPointersVector = std::unordered_set<std::string_view>;
     using Bus = std::string_view;
+    using RetParseDistancesBetweenElement = std::tuple<std::string, std::string, std::uint32_t>;
+    using RetParseDistancesBetween = std::vector<RetParseDistancesBetweenElement>;
+    using DistanceBetween = std::pair<const Stop*, const Stop*>;
 
     struct Stop
     {
@@ -23,7 +28,15 @@ public:
 
         std::string_view name;
         geo::Coordinates coord;
-        std::unordered_map<std::string_view, double>;
+    };
+
+    struct DistanceBetweenHasher
+    {
+        std::size_t operator()(const DistanceBetween& db) const
+        {
+            return std::hash<const Stop*>{}(db.first) +
+                    std::hash<const Stop*>{}(db.second);
+        }
     };
 
     void AddBus(Bus& bus)
@@ -62,6 +75,35 @@ public:
         stopNames_.push_back(std::string{stop.name});
         stop.name = stopNames_.back();
         stops_[stopNames_.back()].first = stop;
+    }
+
+
+
+    void AddDistances(const RetParseDistancesBetween& dbs)
+    {
+        for (const auto& db: dbs)
+        {
+            const std::string& nameA = std::get<0>(db);
+            const std::string& nameB = std::get<1>(db);
+            assert (stops_.count(nameA));
+            assert (stops_.count(nameB));
+
+            auto itA = std::find_if(stops_.begin(),
+                                    stops_.end(),
+                                    [&nameA](const auto& stop){
+                return nameA == stop.first;
+            });
+            auto itB = std::find_if(stops_.begin(),
+                                    stops_.end(),
+                                    [&nameB](const auto& stop){
+                return nameB == stop.first;
+            });
+
+            auto& stopA = itA->second.first;
+            auto& stopB = itB->second.first;
+            auto d = std::make_pair(&stopA, &stopB);
+            distances_[d] = std::get<2>(db);
+        }
     }
 
     [[nodiscard]] Bus& GetBus(std::string_view name)
@@ -137,4 +179,5 @@ private:
     std::unordered_map<std::string_view, std::pair<Stop, BusPointersVector>> stops_{};
     std::list<std::string> busNames_{};
     std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_{};
+    std::unordered_map<DistanceBetween, std::uint32_t, DistanceBetweenHasher> distances_{};
 };

@@ -125,37 +125,43 @@ public:
         ss >> ret.second.lat;
         ss >> ret.second.lng;
 
+        line.clear();
+        line.append(ret.first + " "s);
+        std::string s{};
+        ss >> s;
+        while(!s.empty())
+        {
+            line.append(s + " "s);
+            s.clear();
+            ss >> s;
+        }
+
         return ret;
     }
 
-    using StopParseRetType = std::tuple<std::string, geo::Coordinates, std::unordered_map<std::string_view, double>>;
-
-    [[nodiscard]] StopParseRetType ParseStopWithDistances(std::string& line)
+    [[nodiscard]] TransportCatalogue::RetParseDistancesBetween ParseDistancesBetween(std::string& line)
     {
         using namespace std::literals;
-        static constexpr std::string_view STOP = "Stop"sv;
-        static StopParseRetType emptyStop{};
-        StopParseRetType ret{};
-        line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
-
-        auto semicon = line.find_first_of(':');
-        if (semicon == std::string::npos) {
-            assert(false);
-            return emptyStop;
-        }
-
-        std::get<0>(ret) = line.substr(0, semicon);
-        line = line.substr(semicon + 1);
-        auto comma = line.find_first_of(',');
-        if (comma == std::string::npos) {
-            assert(false);
-            return emptyStop;
-        }
-        line[comma] = ' ';
+        TransportCatalogue::RetParseDistancesBetween ret{};
+        std::string dataLine{};
+        std::string nameA{line.substr(0, line.find_first_of(',') - 1)};
+        line = line.substr(nameA.size());
         std::stringstream ss{line};
-        ss >> std::get<1>(ret).lat;
-        ss >> std::get<1>(ret).lng;
 
+        while (std::getline(ss, dataLine, ','))
+        {
+            if (dataLine.size() < 7U)
+                continue;
+            ltrim(dataLine);
+            rtrim(dataLine);
+            TransportCatalogue::RetParseDistancesBetweenElement el{};
+
+            std::get<2>(el) = std::stod(dataLine.substr(0, dataLine.find('m')));
+            std::get<1>(el) = dataLine.substr(dataLine.find("to ") + 3);
+            std::get<0>(el) = nameA;
+
+            ret.push_back(el);
+        }
         return ret;
     }
 };
@@ -179,8 +185,8 @@ public:
         }
         if (line.find("Stop") == 0)
         {
-            stopDataLines.push_back(line);
             auto tmp{irp.ParseStop(line)};
+            stopDataLines.push_back(std::move(line));
             if (tmp.first.empty()) {
                 assert(false);
                 continue;
@@ -218,21 +224,16 @@ public:
         }
     };
 
+    auto addDistancesBetweenStops = [&stopDataLines, &irp, &tc]{
+        for(std::string& stopDataLine: stopDataLines )
+        {
+            tc.AddDistances(irp.ParseDistancesBetween(stopDataLine));
+        }
+    };
+
     busLinesProcessing();
     addBusesToStops();
-
-    for(std::string& stopDataLine: stopDataLines )
-    {
-        auto tmp{irp.ParseStopWithDistances(stopDataLine)};
-        if (tmp.first.empty()) {
-            assert(false);
-            continue;
-        }
-        TransportCatalogue::Stop stop{tmp.first, tmp.second};
-        tc.AddStop(stop);
-    }
-
-
+    addDistancesBetweenStops();
 
     if (tc.GetBuses().empty() || tc.GetStops().empty())
         std::runtime_error("buses or stops can't be empty");
