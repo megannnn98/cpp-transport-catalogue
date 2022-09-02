@@ -177,22 +177,22 @@ public:
         return stops_.at(stopName).first;
     }
 
-    [[nodiscard]] auto& GetBuses()
+    [[nodiscard]] auto& GetBuses() noexcept
     {
         return buses_;
     }
 
-    [[nodiscard]] auto& GetBuses() const
+    [[nodiscard]] auto& GetBuses() const noexcept
     {
         return buses_;
     }
 
-    [[nodiscard]] auto& GetStops()
+    [[nodiscard]] auto& GetStops() noexcept
     {
         return stops_;
     }
 
-    [[nodiscard]] auto& GetStops() const
+    [[nodiscard]] auto& GetStops() const noexcept
     {
         return stops_;
     }
