@@ -5,6 +5,7 @@
 #include "input_reader.h"
 #include "stat_reader.h"
 #include "transport_catalogue.h"
+#include "log_duration.h"
 
 int main()
 {
@@ -14,7 +15,10 @@ int main()
     const io::StatReader sr{std::cout};
     const TransportCatalogue tc{io::Load(ir)};
 
-    io::ProcessRequest(tc, ir, sr);
+    {
+        LOG_DURATION("123");
+        io::ProcessRequest(tc, ir, sr);
+    }
 
     return 0;
 }

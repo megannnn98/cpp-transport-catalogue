@@ -9,7 +9,8 @@ HEADERS = \
    $$PWD/geo.h \
    $$PWD/input_reader.h \
    $$PWD/stat_reader.h \
-   $$PWD/transport_catalogue.h
+   $$PWD/log_duration.h \
+   $$PWD/transport_catalogue.h \
 
 SOURCES = \
    $$PWD/input_reader.cpp \

@@ -12,8 +12,8 @@ class TransportCatalogue
 {
 public:
     struct Stop;
-    using StopPointersVector = std::vector<std::string_view>;
-    using BusPointersVector = std::unordered_set<std::string_view>;
+    using StopPointersContainer = std::vector<std::string_view>;
+    using BusPointersContainer = std::unordered_set<std::string_view>;
     using Bus = std::string_view;
     using RetParseDistancesBetweenElement = std::tuple<std::string, std::string, std::uint32_t>;
     using RetParseDistancesBetween = std::vector<RetParseDistancesBetweenElement>;
@@ -36,8 +36,8 @@ public:
     {
         std::size_t operator()(const DistanceBetween& db) const
         {
-            return std::hash<const Stop*>{}(db.first) +
-                    std::hash<const Stop*>{}(db.second);
+            return std::hash<const void*>{}(db.first)*37 +
+                    std::hash<const void*>{}(db.second);
         }
     };
 
@@ -52,7 +52,7 @@ public:
     {
         busNames_.push_back(std::string{bus});
         bus = busNames_.back();
-        StopPointersVector v{};
+        StopPointersContainer v{};
         for (const auto& stop: stops)
         {
             auto it = std::find(stopNames_.begin(),
@@ -217,8 +217,8 @@ public:
 private:
 
     std::deque<std::string> stopNames_{};
-    std::unordered_map<std::string_view, std::pair<Stop, BusPointersVector>> stops_{};
+    std::unordered_map<std::string_view, std::pair<Stop, BusPointersContainer>> stops_{};
     std::deque<std::string> busNames_{};
-    std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_{};
+    std::unordered_map<std::string_view, std::pair<Bus, StopPointersContainer>> buses_{};
     std::unordered_map<DistanceBetween, std::uint32_t, DistanceBetweenHasher> distances_{};
 };
