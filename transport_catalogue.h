@@ -31,6 +31,17 @@ public:
         geo::Coordinates coord;
     };
 
+    struct Bus
+    {
+        bool operator==(const Bus& other) const
+        {
+            return (name == other.name);
+        }
+
+        std::string name;
+        bool isCircle{};
+    };
+
     struct DistanceBetweenHasher
     {
         std::size_t operator()(const DistanceBetween& db) const
@@ -46,36 +57,53 @@ public:
         stopnameToStop_.insert(std::make_pair(stops_.back().name, &stops_.back()));
     }
 
-    [[nodiscard]] Stop& GetStop(std::string_view name)
+    [[nodiscard]] const Stop& GetStop(std::string_view name) const
     {
-        auto it = std::find(stops_.begin(),
-                            stops_.end(),
-                            [&name](const Stop& s){
-            return s.name == name;
-        });
-
-        if (it == stops_.end()){
+        if (!stopnameToStop_.count(name)){
             static Stop stop{};
             return stop;
         }
-
-        return *it;
+        return *stopnameToStop_.at(name);
     }
 
-    [[nodiscard]] const Stop& GetStop(std::string_view name) const
+    void AddBus(std::string_view bus, const std::vector<std::string>& stopNames, bool isCircle)
     {
-        auto it = std::find(stops_.cbegin(),
-                            stops_.cend(),
-                            [&name](const Stop& s){
-            return s.name == name;
-        });
+        buses_.push_back(Bus{std::string{bus}, isCircle});
 
-        if (it == stops_.end()){
-            static const Stop stop{};
-            return stop;
+        std::vector<const Stop*> stopPointers{};
+        stopPointers.reserve(stopNames.size());
+        for (const auto& stopName: stopNames)
+        {
+            auto& stop = GetStop(stopName);
+            stopPointers.push_back(&stop);
         }
+        busnameToBus_[buses_.back().name] = std::make_pair(&buses_.back(), std::move(stopPointers));
+    }
 
-        return *it;
+    [[nodiscard]] const Bus& GetBus(std::string_view name) const
+    {
+        if (!busnameToBus_.count(name)){
+            static Bus bus{};
+            return bus;
+        }
+        return *busnameToBus_.at(name).first;
+    }
+
+    [[nodiscard]] const std::vector<const Stop*>& GetBusStops(std::string_view name) const
+    {
+        if (!busnameToBus_.count(name)){
+            static std::vector<const Stop*> stops{};
+            return stops;
+        }
+        return busnameToBus_.at(name).second;
+    }
+
+    [[nodiscard]] bool IsBusCircle(std::string_view name) const
+    {
+        if (!busnameToBus_.count(name)){
+            return false;
+        }
+        return busnameToBus_.at(name).first->isCircle;
     }
 
     TransportCatalogue() = default;
@@ -88,4 +116,6 @@ public:
 private:
     std::deque<Stop> stops_{};
     std::unordered_map<std::string_view, Stop*> stopnameToStop_{};
+    std::deque<Bus> buses_{};
+    std::unordered_map<std::string_view, std::pair<Bus*, std::vector<const Stop*>>> busnameToBus_{};
 };
