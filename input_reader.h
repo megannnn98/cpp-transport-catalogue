@@ -57,11 +57,11 @@ public:
                     s.end());
     };
 
-    [[nodiscard]] TransportCatalogue::RetParseBus ParseBus(std::string& busDataLine)
+    [[nodiscard]] TransportCatalogue::RetParseBus ParseBus(std::string_view busDataLine)
     {
         using namespace std::literals;
         static constexpr std::string_view BUS = "Bus"sv;
-        std::pair<std::string, std::vector<std::string>> ret{};
+        TransportCatalogue::RetParseBus ret{};
         busDataLine = busDataLine.substr(BUS.size() + 1, busDataLine.length() - (BUS.size() + 1));
 
         auto colon = busDataLine.find_first_of(':');
@@ -75,7 +75,7 @@ public:
         ret.first = busDataLine.substr(0, colon);
         busDataLine = busDataLine.substr(colon + 2, busDataLine.size() - (colon + 2));
         char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
-        std::stringstream ss{busDataLine};
+        std::stringstream ss{std::string{busDataLine}};
 
         std::string stopname{};
         std::stack<std::string> circleStopHolder{};
@@ -104,7 +104,7 @@ public:
         using namespace std::literals;
         static constexpr std::string_view STOP = "Stop"sv;
         static TransportCatalogue::RetParseStop emptyStop{};
-        std::pair<std::string, geo::Coordinates> ret{};
+        TransportCatalogue::RetParseStop ret{};
         line = line.substr(STOP.size() + 1, line.length() - (STOP.size() + 1));
 
         auto semicon = line.find_first_of(':');
@@ -125,7 +125,15 @@ public:
         std::stringstream ss{line};
         ss >> ret.second.lat >> ret.second.lng;
 
-        line = ret.first + ": "s + line.substr(line.find(',') + 1);
+
+        if (comma = line.find(',');
+            std::string::npos == comma) {
+            line.clear();
+        }
+        else
+        {
+            line = ret.first + ": "s + line.substr(comma + 1);
+        }
 
         return ret;
     }
@@ -152,7 +160,7 @@ public:
             std::get<1>(el) = dataLine.substr(dataLine.find(TO.data()) + TO.size());
             std::get<0>(el) = nameA;
 
-            ret.push_back(el);
+            ret.push_back(std::move(el));
         }
         return ret;
     }
@@ -176,7 +184,9 @@ public:
         if (line.find("Stop") == 0)
         {
             TransportCatalogue::RetParseStop tmp{irp.ParseStop(line)};
-            stopDataLines.push_back(std::move(line));
+            if (!line.empty()) {
+                stopDataLines.push_back(std::move(line));
+            }
             tc.AddStop(std::move(tmp));
         }
         else if ((line.find("Bus") == 0) && (line.find(':') != std::string::npos))

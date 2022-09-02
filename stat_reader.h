@@ -126,6 +126,5 @@ void inline ProcessRequest(const TransportCatalogue& tc, const InputReader& ir, 
             sr.PrintStop(tc, line.substr(STOP.size() + 1, line.size() - (STOP.size() + 1)));
         }
     } // end while
-    std::cout << std::endl;
 }
 } // namespace io
