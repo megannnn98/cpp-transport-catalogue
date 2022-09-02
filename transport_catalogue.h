@@ -91,8 +91,6 @@ public:
         {
             const std::string& nameA = std::get<0>(db);
             const std::string& nameB = std::get<1>(db);
-            assert (stops_.count(nameA));
-            assert (stops_.count(nameB));
 
             auto itA = std::find_if(stops_.begin(),
                                     stops_.end(),
@@ -114,8 +112,6 @@ public:
 
     std::uint32_t GetDistanceBetween(std::string_view nameA, std::string_view nameB) const
     {
-        assert (stops_.count(nameA));
-        assert (stops_.count(nameB));
         auto itA = std::find_if(stops_.begin(),
                                 stops_.end(),
                                 [&nameA](const auto& stop){

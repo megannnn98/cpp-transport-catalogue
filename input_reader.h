@@ -130,16 +130,15 @@ public:
         return ret;
     }
 
-    [[nodiscard]] TransportCatalogue::RetParseDistancesBetween ParseDistancesBetween(std::string& line)
+    [[nodiscard]] TransportCatalogue::RetParseDistancesBetween ParseDistancesBetween(std::string_view line)
     {
         using namespace std::literals;
         static constexpr std::string_view TO = "to "sv;
         static constexpr const unsigned MIN_LINE_LEN = 2U;
         TransportCatalogue::RetParseDistancesBetween ret{};
         std::string dataLine{};
-        std::string nameA{line.substr(0, line.find_first_of(':'))};
-        line = line.substr(nameA.size() + 2);
-        std::stringstream ss{line};
+        const std::string nameA{line.substr(0, line.find_first_of(':'))};
+        std::stringstream ss{std::string{line.substr(nameA.size() + 2)}};
 
         while (std::getline(ss, dataLine, ','))
         {

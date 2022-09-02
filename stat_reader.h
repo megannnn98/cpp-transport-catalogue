@@ -94,7 +94,10 @@ public:
         os_ << "Stop " << name << ": buses ";
         for (const auto& bus: vv)
         {
-            os_ << bus << " ";
+            os_ << bus;
+            if (&bus != &vv.back()) {
+                os_ << " ";
+            }
         }
         os_ << std::endl;
 
