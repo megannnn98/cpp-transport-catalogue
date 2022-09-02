@@ -54,7 +54,7 @@ public:
     void AddStop(std::string_view name, geo::Coordinates coord)
     {
         stops_.push_back(Stop{std::string{name}, coord});
-        stopnameToStop_.insert(std::make_pair(stops_.back().name, &stops_.back()));
+        stopnameToStop_.insert(std::make_pair(stops_.back().name, std::make_pair(&stops_.back(), std::unordered_set<const Bus*>{})));
     }
 
     [[nodiscard]] const Stop& GetStop(std::string_view name) const
@@ -63,7 +63,18 @@ public:
             static Stop stop{};
             return stop;
         }
-        return *stopnameToStop_.at(name);
+        return *stopnameToStop_.at(name).first;
+    }
+
+    void AddBusesToStop(std::string_view name, const std::vector<std::string>& busNames)
+    {
+        std::unordered_set<const Bus*> busPointers{};
+        for (const auto& busName: busNames)
+        {
+            auto& bus = GetBus(busName);
+            busPointers.insert(&bus);
+        }
+        stopnameToStop_.at(name).second = std::move(busPointers);
     }
 
     void AddBus(std::string_view bus, const std::vector<std::string>& stopNames, bool isCircle)
@@ -115,7 +126,7 @@ public:
 
 private:
     std::deque<Stop> stops_{};
-    std::unordered_map<std::string_view, Stop*> stopnameToStop_{};
+    std::unordered_map<std::string_view, std::pair<Stop*, std::unordered_set<const Bus*>>> stopnameToStop_{};
     std::deque<Bus> buses_{};
     std::unordered_map<std::string_view, std::pair<Bus*, std::vector<const Stop*>>> busnameToBus_{};
 };
