@@ -168,6 +168,11 @@ public:
                                       distances_.count(d2) ? distances_.at(d2) : 0UL;
     }
 
+    [[nodiscard]] const geo::Coordinates& GetStopCoords(std::string_view name) const
+    {
+        return GetStop(name).coord;
+    }
+
     TransportCatalogue() = default;
     TransportCatalogue(const TransportCatalogue&) = delete;
     TransportCatalogue& operator=(const TransportCatalogue&) = delete;

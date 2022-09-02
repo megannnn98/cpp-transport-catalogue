@@ -26,81 +26,81 @@ public:
 
     void PrintBus(const TransportCatalogue& tc, std::string_view name) const
     {
-//        auto bus = tc.GetBus(name);
-//        auto stops = tc.GetBusStops(name);
-//        if (stops.empty()) {
-//            os_ << "Bus " << name << ": " << "not found" << std::endl;
-//            return;
-//        }
+        auto bus = tc.GetBus(name);
+        auto stops = tc.GetBusStops(name);
+        if (stops.empty()) {
+            os_ << "Bus " << name << ": " << "not found" << std::endl;
+            return;
+        }
 
-//        auto uniqCalc = [](const std::vector<std::string_view>& stops) ->size_t {
-//            std::unordered_set<std::string_view> uniqueStops{};
-//            std::for_each(stops.cbegin(),
-//                          stops.cend(),
-//                          [&uniqueStops](const std::string_view stop){
-//                uniqueStops.insert(stop);
-//            });
-//            return uniqueStops.size();
-//        };
+        auto uniqCalc = [](const std::vector<const Stop*>& stops) ->size_t {
+            std::unordered_set<std::string_view> uniqueStops{};
+            std::for_each(stops.cbegin(),
+                          stops.cend(),
+                          [&uniqueStops](const Stop* stop){
+                uniqueStops.insert(stop->name);
+            });
+            return uniqueStops.size();
+        };
 
-//        double directDistance{};
-//        double realDistance{};
-//        double curvature{};
-//        std::vector<std::string_view>::iterator it = stops.begin();
-//        while (it != (stops.end() - 1)) {
-//            auto& coords1 = tc.GetStopCoords(*it);
-//            auto& coords2 = tc.GetStopCoords(*(std::next(it)));
+        double directDistance{};
+        double realDistance{};
+        double curvature{};
 
-//            directDistance += ComputeDistance(coords1, coords2);
+        // const std::vector<const Stop*>
+        std::vector<const Stop*>::const_iterator it = stops.cbegin();
+        while (it != (stops.cend() - 1)) {
+            auto nameA = (*it)->name;
+            auto nameB = (*std::next(it))->name;
+            directDistance += ComputeDistance(tc.GetStopCoords(nameA), tc.GetStopCoords(nameB));
 
-//            const auto delta = tc.GetDistanceBetween(*it, *(std::next(it)));
-//            realDistance += delta ? delta : directDistance;
+            const auto delta = tc.GetDistanceBetween(nameA, nameB);
+            realDistance += delta ? delta : directDistance;
 
-//            it = std::next(it);
-//        }
-//        curvature = realDistance / directDistance;
+            it = std::next(it);
+        }
+        curvature = realDistance / directDistance;
 
-////        Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature
-//        os_ << "Bus " << bus << ": "
-//                  << stops.size() << " stops on route, "
-//                  << uniqCalc(stops) << " unique stops, "
-//                  << realDistance << " route length, "
-//                  << std::setprecision(6) << curvature << " curvature" << std::endl;
+//        Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature
+        os_ << "Bus " << name << ": "
+                  << stops.size() << " stops on route, "
+                  << uniqCalc(stops) << " unique stops, "
+                  << realDistance << " route length, "
+                  << std::setprecision(6) << curvature << " curvature" << std::endl;
     }
 
     void PrintStop(const TransportCatalogue& tc, std::string_view name) const
     {
-//        auto& stops = tc.GetStops();
-//        auto it = std::find_if(stops.cbegin(),
-//                               stops.cend(),
-//                               [&name](const auto& p) {
-//                  return p.first == name;
-//              });
-//        if (it == stops.end()) {
-//            os_ << "Stop " << name << ": " << "not found" << std::endl;
-//            return;
-//        }
+        // std::unordered_map<std::string_view, std::pair<Stop*, BusPointersContainer>> stopnameToStop_{};
+        auto& stops = tc.GetStops();
+        if (!stops.count(name)) {
+            os_ << "Stop " << name << ": " << "not found" << std::endl;
+            return;
+        }
 
-//        if (it->second.second.empty()) {
-//            os_ << "Stop " << name << ": " << "no buses" << std::endl;
-//            return;
-//        }
+        if (stops.at(name).second.empty()) {
+            os_ << "Stop " << name << ": " << "no buses" << std::endl;
+            return;
+        }
 
-//        std::vector<std::string_view> vv{it->second.second.begin(),
-//                                         it->second.second.end()};
+        std::vector<std::string_view> vv(stops.at(name).second.size());
 
-//        std::sort(vv.begin(), vv.end());
+        int i = 0;
+        for (auto v: stops.at(name).second)
+        {
+            vv[i++] = v->name;
+        }
 
-//        os_ << "Stop " << name << ": buses ";
-//        for (const auto& bus: vv)
-//        {
-//            os_ << bus;
-//            if (&bus != &vv.back()) {
-//                os_ << " ";
-//            }
-//        }
-//        os_ << std::endl;
-
+        std::sort(vv.begin(), vv.end());
+        os_ << "Stop " << name << ": buses ";
+        for (const auto& bus: vv)
+        {
+            os_ << bus;
+            if (&bus != &vv.back()) {
+                os_ << " ";
+            }
+        }
+        os_ << std::endl;
     }
 };
 
