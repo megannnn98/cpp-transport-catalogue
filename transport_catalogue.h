@@ -46,6 +46,38 @@ public:
         stopnameToStop_.insert(std::make_pair(stops_.back().name, &stops_.back()));
     }
 
+    [[nodiscard]] Stop& GetStop(std::string_view name)
+    {
+        auto it = std::find(stops_.begin(),
+                            stops_.end(),
+                            [&name](const Stop& s){
+            return s.name == name;
+        });
+
+        if (it == stops_.end()){
+            static Stop stop{};
+            return stop;
+        }
+
+        return *it;
+    }
+
+    [[nodiscard]] const Stop& GetStop(std::string_view name) const
+    {
+        auto it = std::find(stops_.cbegin(),
+                            stops_.cend(),
+                            [&name](const Stop& s){
+            return s.name == name;
+        });
+
+        if (it == stops_.end()){
+            static const Stop stop{};
+            return stop;
+        }
+
+        return *it;
+    }
+
     TransportCatalogue() = default;
     TransportCatalogue(const TransportCatalogue&) = delete;
     TransportCatalogue& operator=(const TransportCatalogue&) = delete;
