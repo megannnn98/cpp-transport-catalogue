@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include <list>
+#include <deque>
 #include <algorithm>
 #include <cassert>
 #include "geo.h"
@@ -216,9 +216,9 @@ public:
 
 private:
 
-    std::list<std::string> stopNames_{};
+    std::deque<std::string> stopNames_{};
     std::unordered_map<std::string_view, std::pair<Stop, BusPointersVector>> stops_{};
-    std::list<std::string> busNames_{};
+    std::deque<std::string> busNames_{};
     std::unordered_map<std::string_view, std::pair<Bus, StopPointersVector>> buses_{};
     std::unordered_map<DistanceBetween, std::uint32_t, DistanceBetweenHasher> distances_{};
 };
