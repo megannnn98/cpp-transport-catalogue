@@ -21,11 +21,11 @@ public:
     ~StatReader() = default;
     StatReader(std::ostream& os) : os_{os} {}
 
-//    using Bus = TransportCatalogue::Bus;
+    using Bus = TransportCatalogue::Bus;
     using Stop = TransportCatalogue::Stop;
 
-//    void PrintBus(const TransportCatalogue& tc, std::string_view name) const
-//    {
+    void PrintBus(const TransportCatalogue& tc, std::string_view name) const
+    {
 //        auto bus = tc.GetBus(name);
 //        auto stops = tc.GetBusStops(name);
 //        if (stops.empty()) {
@@ -66,7 +66,7 @@ public:
 //                  << uniqCalc(stops) << " unique stops, "
 //                  << realDistance << " route length, "
 //                  << std::setprecision(6) << curvature << " curvature" << std::endl;
-//    }
+    }
 
     void PrintStop(const TransportCatalogue& tc, std::string_view name) const
     {
@@ -119,7 +119,7 @@ void inline ProcessRequest(const TransportCatalogue& tc, const InputReader& ir, 
         parser.rtrim(line);
         if (line.length() && !line.find(BUS.data()))
         {
-//            sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - (BUS.size() + 1)));
+            sr.PrintBus(tc, line.substr(BUS.size() + 1, line.size() - (BUS.size() + 1)));
         }
         if (line.length() && !line.find(STOP.data()))
         {

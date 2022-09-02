@@ -12,12 +12,13 @@ class TransportCatalogue
 {
 public:
     struct Stop;
-    using StopPointersContainer = std::vector<std::string_view>;
-    using BusPointersContainer = std::unordered_set<std::string_view>;
+    struct Bus;
+    using StopPointersContainer = std::vector<const Stop*>;
+    using BusPointersContainer = std::unordered_set<const Bus*>;
     using RetParseDistancesBetweenElement = std::tuple<std::string, std::string, std::uint32_t>;
     using RetParseDistancesBetween = std::vector<RetParseDistancesBetweenElement>;
     using DistanceBetween = std::pair<const Stop*, const Stop*>;
-    using RetParseBus = std::pair<std::string, std::vector<std::string>>;
+    using RetParseBus = std::tuple<std::string, std::vector<std::string>, bool>;
     using RetParseStop = std::pair<std::string, geo::Coordinates>;
 
     struct Stop
@@ -77,6 +78,12 @@ public:
         stopnameToStop_.at(name).second = std::move(busPointers);
     }
 
+    void AddBusToStop(std::string_view name, std::string_view busName)
+    {
+        auto& bus = GetBus(busName);
+        stopnameToStop_.at(name).second.insert(&bus);
+    }
+
     void AddBus(std::string_view bus, const std::vector<std::string>& stopNames, bool isCircle)
     {
         buses_.push_back(Bus{std::string{bus}, isCircle});
@@ -117,6 +124,50 @@ public:
         return busnameToBus_.at(name).first->isCircle;
     }
 
+    [[nodiscard]] auto& GetBuses() noexcept
+    {
+        return busnameToBus_;
+    }
+
+    [[nodiscard]] auto& GetBuses() const noexcept
+    {
+        return busnameToBus_;
+    }
+
+    [[nodiscard]] auto& GetStops() noexcept
+    {
+        return stopnameToStop_;
+    }
+
+    [[nodiscard]] auto& GetStops() const noexcept
+    {
+        return stopnameToStop_;
+    }
+
+    void AddDistances(const RetParseDistancesBetween& dbs)
+    {
+        for (const auto& db: dbs)
+        {
+            const std::string& nameA = std::get<0>(db);
+            const std::string& nameB = std::get<1>(db);
+            auto& stopA = GetStop(nameA);
+            auto& stopB = GetStop(nameB);
+            auto d = std::make_pair(&stopA, &stopB);
+            distances_[d] = std::get<2>(db);
+        }
+    }
+
+    std::uint32_t GetDistanceBetween(std::string_view nameA, std::string_view nameB) const
+    {
+        auto& stopA = GetStop(nameA);
+        auto& stopB = GetStop(nameB);
+        auto d1 = std::make_pair(&stopA, &stopB);
+        auto d2 = std::make_pair(&stopB, &stopA);
+
+        return distances_.count(d1) ? distances_.at(d1) :
+                                      distances_.count(d2) ? distances_.at(d2) : 0UL;
+    }
+
     TransportCatalogue() = default;
     TransportCatalogue(const TransportCatalogue&) = delete;
     TransportCatalogue& operator=(const TransportCatalogue&) = delete;
@@ -126,7 +177,8 @@ public:
 
 private:
     std::deque<Stop> stops_{};
-    std::unordered_map<std::string_view, std::pair<Stop*, std::unordered_set<const Bus*>>> stopnameToStop_{};
+    std::unordered_map<std::string_view, std::pair<Stop*, BusPointersContainer>> stopnameToStop_{};
     std::deque<Bus> buses_{};
-    std::unordered_map<std::string_view, std::pair<Bus*, std::vector<const Stop*>>> busnameToBus_{};
+    std::unordered_map<std::string_view, std::pair<Bus*, StopPointersContainer>> busnameToBus_{};
+    std::unordered_map<DistanceBetween, std::uint32_t, DistanceBetweenHasher> distances_{};
 };
