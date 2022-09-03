@@ -9,6 +9,7 @@
 #include <cassert>
 #include "transport_catalogue.h"
 
+namespace tc {
 namespace io {
 class InputReader
 {
@@ -235,3 +236,4 @@ public:
 }
 
 } // namespace io
+} // namespace tc

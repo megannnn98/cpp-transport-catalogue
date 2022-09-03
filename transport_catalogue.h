@@ -8,6 +8,8 @@
 #include <cassert>
 #include "geo.h"
 
+namespace tc 
+{
 class TransportCatalogue
 {
 public:
@@ -187,3 +189,4 @@ private:
     std::unordered_map<std::string_view, std::pair<Bus*, StopPointersContainer>> busnameToBus_{};
     std::unordered_map<DistanceBetween, std::uint32_t, DistanceBetweenHasher> distances_{};
 };
+} // namespace tc 

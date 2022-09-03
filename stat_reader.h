@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <numeric>
 
+namespace tc {
 namespace io {
 class StatReader
 {
@@ -45,7 +46,6 @@ public:
 
         double directDistance{};
         double realDistance{};
-        double curvature{};
 
         std::vector<const Stop*>::const_iterator it = stops.cbegin();
         while (it != (stops.cend() - 1)) {
@@ -58,14 +58,13 @@ public:
 
             it = std::next(it);
         }
-        curvature = realDistance / directDistance;
 
 //        Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature
         os_ << "Bus " << name << ": "
                   << stops.size() << " stops on route, "
                   << uniqCalc(stops) << " unique stops, "
                   << realDistance << " route length, "
-                  << std::setprecision(6) << curvature << " curvature" << std::endl;
+                  << std::setprecision(6) << realDistance / directDistance << " curvature" << std::endl;
     }
 
     void PrintStop(const TransportCatalogue& tc, std::string_view name) const
@@ -127,3 +126,4 @@ void inline ProcessRequest(const TransportCatalogue& tc, const InputReader& ir, 
     } // end while
 }
 } // namespace io
+} // namespace tc
