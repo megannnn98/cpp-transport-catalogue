@@ -75,7 +75,7 @@ public:
         std::get<0>(ret) = busDataLine.substr(0, colon);
         busDataLine = busDataLine.substr(colon + 2, busDataLine.size() - (colon + 2));
         char delim = (busDataLine.find('>') == std::string::npos) ? '-' : '>';
-        std::get<2>(ret) = delim;
+        std::get<2>(ret) = (delim == '>');
         std::stringstream ss{std::string{busDataLine}};
 
         std::string stopname{};
@@ -205,9 +205,12 @@ public:
     };
 
     auto addBusesToStops = [&tc]{
-        for (auto& [busname, data]: tc.GetBuses())
+
+        // std::unordered_map<std::string_view, std::pair<Bus*, StopPointersContainer>> busnameToBus_{};
+        for (auto& [busname, busStopsPair]: tc.GetBuses())
         {
-            for (auto& stop: data.second )
+            // using StopPointersContainer = std::vector<const Stop*>;
+            for (const TransportCatalogue::Stop* stop: busStopsPair.second )
             {
                 tc.AddBusToStop(stop->name, busname);
             }

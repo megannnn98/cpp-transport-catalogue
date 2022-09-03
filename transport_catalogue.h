@@ -52,10 +52,10 @@ public:
         }
     };
 
-    void AddStop(std::string_view name, geo::Coordinates coord)
+    void AddStop(std::string_view name, const geo::Coordinates coord)
     {
         stops_.push_back(Stop{std::string{name}, coord});
-        stopnameToStop_.insert(std::make_pair(stops_.back().name, std::make_pair(&stops_.back(), std::unordered_set<const Bus*>{})));
+        stopnameToStop_[stops_.back().name] = std::make_pair(&stops_.back(), std::unordered_set<const Bus*>{});
     }
 
     [[nodiscard]] const Stop& GetStop(std::string_view name) const
@@ -67,7 +67,7 @@ public:
         return *stopnameToStop_.at(name).first;
     }
 
-    void AddBusesToStop(std::string_view name, const std::vector<std::string>& busNames)
+    void AddBusesToStop(std::string_view stopName, const std::vector<std::string>& busNames)
     {
         std::unordered_set<const Bus*> busPointers{};
         for (const auto& busName: busNames)
@@ -75,13 +75,13 @@ public:
             auto& bus = GetBus(busName);
             busPointers.insert(&bus);
         }
-        stopnameToStop_.at(name).second = std::move(busPointers);
+        stopnameToStop_.at(stopName).second = std::move(busPointers);
     }
 
-    void AddBusToStop(std::string_view name, std::string_view busName)
+    void AddBusToStop(std::string_view stopName, std::string_view busName)
     {
         auto& bus = GetBus(busName);
-        stopnameToStop_.at(name).second.insert(&bus);
+        stopnameToStop_.at(stopName).second.insert(&bus);
     }
 
     void AddBus(std::string_view bus, const std::vector<std::string>& stopNames, bool isCircle)
@@ -92,8 +92,8 @@ public:
         stopPointers.reserve(stopNames.size());
         for (const auto& stopName: stopNames)
         {
-            auto& stop = GetStop(stopName);
-            stopPointers.push_back(&stop);
+            auto& stopRef = GetStop(stopName);
+            stopPointers.push_back(&stopRef);
         }
         busnameToBus_[buses_.back().name] = std::make_pair(&buses_.back(), std::move(stopPointers));
     }

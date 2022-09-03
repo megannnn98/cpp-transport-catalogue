@@ -47,7 +47,6 @@ public:
         double realDistance{};
         double curvature{};
 
-        // const std::vector<const Stop*>
         std::vector<const Stop*>::const_iterator it = stops.cbegin();
         while (it != (stops.cend() - 1)) {
             auto nameA = (*it)->name;
