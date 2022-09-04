@@ -28,13 +28,13 @@ void InputReadParser::ltrim(std::string& s) {
     s.erase(s.begin(),
                 std::find_if(s.begin(), s.end(),
                                 [](char ch) { return !std::isspace(ch); }));
-};
+}
 
 void InputReadParser::rtrim(std::string& s) {
     s.erase(std::find_if(s.rbegin(), s.rend(),
                                 [](char ch) { return !std::isspace(ch); }).base(),
                 s.end());
-};
+}
 
 [[nodiscard]] TransportCatalogue::RetParseBus InputReadParser::ParseBus(std::string_view busDataLine)
 {
@@ -174,7 +174,7 @@ void InputReadParser::rtrim(std::string& s) {
         }
     } // end while
 
-    auto busLinesProcessing = [&busDataLines, &irp, &tc]{
+    auto processBusLines = [&busDataLines, &irp, &tc]{
         for(std::string& busDataLine: busDataLines )
         {
             TransportCatalogue::RetParseBus tmp{irp.ParseBus(busDataLine)};
@@ -202,7 +202,7 @@ void InputReadParser::rtrim(std::string& s) {
         }
     };
 
-    busLinesProcessing();
+    processBusLines();
     addBusesToStops();
     addDistancesBetweenStops();
 
