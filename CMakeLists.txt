@@ -1,25 +1,42 @@
-cmake_minimum_required(VERSION 3.18)
+# Created by and for Qt Creator This file was created for editing the project sources only.
+# You may attempt to use it for building too, by modifying this file here.
 
-project(search_server)
+cmake_minimum_required(VERSION 3.5)
+project(tra3)
 
-
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
-add_executable(search_server    main.cpp 
-                                input_reader.cpp
-                                stat_reader.cpp
-                                transport_catalogue.cpp)
+include_directories(
+    .
+)
 
-set_target_properties(search_server PROPERTIES CXX_STANDARD 17)
+set (SRCS
+    domain.cpp
+    domain.h
+    geo.cpp
+    geo.h
+    json.cpp
+    json.h
+    json_reader.cpp
+    json_reader.h
+    main.cpp
+    map_renderer.cpp
+    map_renderer.h
+    request_handler.cpp
+    request_handler.h
+    svg.cpp
+    svg.h
+    transport_catalogue.cpp
+    transport_catalogue.h
+)
 
-add_compile_options(-Wall 
-                    -Wextra 
-                    -pedantic 
-                    -Werror
-                    -Wmisleading-indentation
-                    -Wduplicated-cond
-                    -Wduplicated-branches
-                    -Wlogical-op
-                    -Wuseless-cast
-                    )
+
+add_executable(${CMAKE_PROJECT_NAME} ${SRCS})
+
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)

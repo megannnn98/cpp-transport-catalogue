@@ -1,15 +1,22 @@
+#include <cassert>
+#include <chrono>
+#include <sstream>
+#include <string_view>
 #include <iostream>
-#include "input_reader.h"
-#include "stat_reader.h"
-#include "transport_catalogue.h"
 
-int main()
-{
-    const tc::io::InputReader ir{std::cin};
-    const tc::io::StatReader sr{std::cout};
-    const tc::TransportCatalogue tc{tc::io::Load(ir)};
+#include "json_reader.h"
+#include "request_handler.h"
+#include "map_renderer.h"
 
-    tc::io::ProcessRequest(tc, ir, sr);
+using namespace json;
 
-    return 0;
+int main() {
+
+    json::JsonReader jr{std::cin};
+    auto tc{jr.MakeCatalogue()};
+    auto rs{jr.MakeRenderSettings()};
+
+    tc::RequestHandler handler{tc, rs};
+
+    jr.Print(handler, std::cout);
 }
