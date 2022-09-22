@@ -112,6 +112,98 @@ tc::TransportCatalogue json::JsonReader::MakeCatalogue()
     return tc;
 }
 
+json::Dict json::JsonReader::GenStop(int id, const tc::RequestHandler& handler, const json::Node& source) const
+{
+    using namespace std::literals;
+    json::Dict dict{};
+    dict["request_id"s] = id;
+    std::string_view name = source.AsDict().at("name"s).AsString();
+
+    if (handler.GetStop(name).name.empty())
+    {
+        dict["error_message"s] = "not found"s;
+    }
+    else
+    {
+        json::Array arrBuses{};
+        auto buses = handler.GetBusesFromStop(name);
+        for (const auto& b: buses)
+        {
+            arrBuses.push_back(b->name);
+        }
+        std::sort(arrBuses.begin(), arrBuses.end(), [](json::Node& a, json::Node& b){
+            return std::lexicographical_compare(a.AsString().begin(), a.AsString().end(),
+                                          b.AsString().begin(), b.AsString().end());
+        });
+
+        dict["buses"] = std::move(arrBuses);
+    }
+    return dict;
+}
+
+json::Dict json::JsonReader::GenBus(int id, const tc::RequestHandler& handler, const json::Node& source) const
+{
+    using namespace std::literals;
+    std::string_view name = source.AsMap().at("name"s).AsString();
+    json::Dict dict{};
+    auto bus = handler.GetBus(name);
+
+    dict["request_id"s] = id;
+    if (bus.name.empty())
+    {
+          dict["error_message"s] = "not found"s;
+    }
+    else
+    {
+        auto uniqCalc = [](const std::vector<const domain::Stop *> &stops) -> size_t {
+          std::unordered_set<std::string_view> uniqueStops{};
+          std::for_each(
+              stops.cbegin(), stops.cend(),
+              [&uniqueStops](const domain::Stop *stop) { uniqueStops.insert(stop->name); });
+          return uniqueStops.size();
+        };
+
+        double directDistance{};
+        double realDistance{};
+        auto stops = handler.GetStopsFromBus(name);
+
+        std::vector<const domain::Stop *>::const_iterator it = stops.cbegin();
+        while (it != (stops.cend() - 1)) {
+          auto nameA = (*it)->name;
+          auto nameB = (*std::next(it))->name;
+          directDistance +=
+              ComputeDistance(handler.GetStopCoords(nameA), handler.GetStopCoords(nameB));
+
+          const auto delta = handler.GetDistanceBetween(nameA, nameB);
+          realDistance += delta ? delta : directDistance;
+
+          it = std::next(it);
+        }
+
+        dict["curvature"] = realDistance / directDistance;
+        dict["route_length"] = realDistance;
+        dict["stop_count"] = static_cast<int>(stops.size());
+        dict["unique_stop_count"] = static_cast<int>(uniqCalc(stops));
+    }
+
+    return dict;
+}
+
+json::Dict json::JsonReader::GenMap(int id, const tc::RequestHandler& handler) const
+{
+    using namespace std::literals;
+    svg::Document doc;
+    handler.MakeDoc(doc);
+    std::ostringstream stream;
+    doc.Render(stream);
+    json::Dict dict{};
+
+    dict["map"s] = stream.str();
+    dict["request_id"s] = id;
+
+    return dict;
+}
+
 void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os) const
 {
     using namespace std::literals;
@@ -128,90 +220,13 @@ void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os
         int id = arr.AsMap().at("id"s).AsInt();
 
         if (type == "Stop"s) {
-
-            json::Dict dict{};
-            json::Array arrBuses{};
-            dict["request_id"s] = id;
-            std::string_view name = arr.AsMap().at("name"s).AsString();
-
-
-            if (handler.GetStop(name).name.empty())
-            {
-                dict["error_message"s] = "not found"s;
-            }
-            else
-            {
-                auto buses = handler.GetBusesFromStop(name);
-                for (const auto& b: buses)
-                {
-                    arrBuses.push_back(b->name);
-                }
-                std::sort(arrBuses.begin(), arrBuses.end(), [](json::Node& a, json::Node& b){
-                    return std::lexicographical_compare(a.AsString().begin(), a.AsString().end(),
-                                                  b.AsString().begin(), b.AsString().end());
-                });
-
-                dict["buses"] = std::move(arrBuses);
-            }
-
-            mainArr.push_back(std::move(dict));
+            mainArr.push_back(std::move(GenStop(id, handler, arr)));
         }
         else if (type == "Bus"s) {
-
-          std::string_view name = arr.AsMap().at("name"s).AsString();
-          json::Dict dict{};
-          auto bus = handler.GetBus(name);
-
-          dict["request_id"s] = id;
-          if (bus.name.empty())
-          {
-                dict["error_message"s] = "not found"s;
-          }
-          else
-          {
-              auto uniqCalc = [](const std::vector<const domain::Stop *> &stops) -> size_t {
-                std::unordered_set<std::string_view> uniqueStops{};
-                std::for_each(
-                    stops.cbegin(), stops.cend(),
-                    [&uniqueStops](const domain::Stop *stop) { uniqueStops.insert(stop->name); });
-                return uniqueStops.size();
-              };
-
-              double directDistance{};
-              double realDistance{};
-              auto stops = handler.GetStopsFromBus(name);
-
-              std::vector<const domain::Stop *>::const_iterator it = stops.cbegin();
-              while (it != (stops.cend() - 1)) {
-                auto nameA = (*it)->name;
-                auto nameB = (*std::next(it))->name;
-                directDistance +=
-                    ComputeDistance(handler.GetStopCoords(nameA), handler.GetStopCoords(nameB));
-
-                const auto delta = handler.GetDistanceBetween(nameA, nameB);
-                realDistance += delta ? delta : directDistance;
-
-                it = std::next(it);
-              }
-
-              dict["curvature"] = realDistance / directDistance;
-              dict["route_length"] = realDistance;
-              dict["stop_count"] = static_cast<int>(stops.size());
-              dict["unique_stop_count"] = static_cast<int>(uniqCalc(stops));
-          }
-          mainArr.push_back(std::move(dict));
+            mainArr.push_back(std::move(GenBus(id, handler, arr)));
         }
         else if (type == "Map"s) {
-            svg::Document doc;
-            handler.MakeDoc(doc);
-            std::ostringstream stream;
-            doc.Render(stream);
-            json::Dict dict{};
-
-            dict["map"s] = stream.str();
-            dict["request_id"s] = id;
-
-            mainArr.push_back(dict);
+            mainArr.push_back(std::move(GenMap(id, handler)));
         }
     } // end for
     json::Print(json::Document{mainArr}, os);
