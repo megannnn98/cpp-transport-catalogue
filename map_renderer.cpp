@@ -149,3 +149,128 @@ void renderer::MapRenderer::MakeDoc(svg::Document& doc, const std::unordered_map
         s.Draw(doc);
     }
 }
+
+
+namespace renderer
+{
+    MapRenderer::MapRenderer(RenderSettings settings)
+        : settings_{settings}
+    {
+    }
+
+    MapRenderer::Route::Route(std::vector<svg::Point>&& points, double line_width, svg::Color color)
+        : points_{std::move(points)},
+          line_width_{line_width},
+          color_{color}
+    {}
+
+    void MapRenderer::Route::Draw(svg::ObjectContainer& container) const {
+
+        svg::Polyline pl{};
+        for (auto l: points_) {
+            pl.AddPoint(l);
+        }
+        pl.SetFillColor(svg::Color{});
+        pl.SetStrokeWidth(line_width_);
+        pl.SetStrokeColor(color_);
+        pl.SetStrokeLineCap(svg::StrokeLineCap::ROUND);
+        pl.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+
+        container.Add(pl);
+    }
+
+    MapRenderer::RouteText::RouteText(svg::Color fill,
+                       svg::Color stroke,
+                       double stroke_width,
+                       svg::Point pos,
+                       svg::Point offset,
+                       uint32_t font_size,
+                       const std::string& font_family,
+                       const std::string& font_weight,
+                       const std::string& text)
+    {
+        text_.SetFillColor(fill)
+             .SetStrokeColor(stroke)
+             .SetStrokeWidth(stroke_width)
+             .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+             .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND)
+             .SetPosition(pos)
+             .SetOffset(offset)
+             .SetFontSize(font_size)
+             .SetFontFamily(font_family)
+             .SetFontWeight(font_weight)
+             .SetData(text);
+    }
+
+    MapRenderer::RouteText::RouteText(svg::Color fill,
+                       svg::Point pos,
+                       svg::Point offset,
+                       uint32_t font_size,
+                       const std::string& font_family,
+                       const std::string& font_weight,
+                       const std::string& text)
+    {
+        text_.SetFillColor(fill)
+             .SetPosition(pos)
+             .SetOffset(offset)
+             .SetFontSize(font_size)
+             .SetFontFamily(font_family)
+             .SetFontWeight(font_weight)
+             .SetData(text);
+    }
+
+    MapRenderer::RouteText::RouteText(svg::Color fill,
+                       svg::Color stroke,
+                       double stroke_width,
+                       svg::Point pos,
+                       svg::Point offset,
+                       uint32_t font_size,
+                       const std::string& font_family,
+                       const std::string& text)
+    {
+        text_.SetFillColor(fill)
+             .SetStrokeColor(stroke)
+             .SetStrokeWidth(stroke_width)
+             .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+             .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND)
+             .SetPosition(pos)
+             .SetOffset(offset)
+             .SetFontSize(font_size)
+             .SetFontFamily(font_family)
+             .SetData(text);
+    }
+
+    MapRenderer::RouteText::RouteText(svg::Color fill,
+                       svg::Point pos,
+                       svg::Point offset,
+                       uint32_t font_size,
+                       const std::string& font_family,
+                       const std::string& text)
+    {
+        text_.SetFillColor(fill)
+             .SetPosition(pos)
+             .SetOffset(offset)
+             .SetFontSize(font_size)
+             .SetFontFamily(font_family)
+             .SetData(text);
+    }
+
+    void MapRenderer::RouteText::Draw(svg::ObjectContainer& container) const {
+        container.Add(text_);
+    }
+
+    MapRenderer::StopCircle::StopCircle(svg::Point pos, double radius, const std::string& fill)
+        : circle_{}
+    {
+        circle_.SetCenter(pos)
+               .SetRadius(radius)
+               .SetFillColor(fill);
+    }
+
+    void MapRenderer::StopCircle::Draw(svg::ObjectContainer& container) const {
+        container.Add(circle_);
+    }
+} // namespace renderer
+
+
+

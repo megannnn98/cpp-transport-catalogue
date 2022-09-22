@@ -112,10 +112,7 @@ struct MapRenderer
 {
     RenderSettings settings_{};
 
-    explicit MapRenderer(RenderSettings settings)
-        : settings_{settings}
-    {
-    }
+    explicit MapRenderer(RenderSettings settings);
 
     class Route : public svg::Drawable {
         std::vector<svg::Point> points_{};
@@ -124,26 +121,8 @@ struct MapRenderer
 
     public:
         ~Route() = default;
-        explicit Route(std::vector<svg::Point>&& points, double line_width, svg::Color color)
-            : points_{std::move(points)},
-              line_width_{line_width},
-              color_{color}
-        {}
-
-        void Draw(svg::ObjectContainer& container) const override {
-
-            svg::Polyline pl{};
-            for (auto l: points_) {
-                pl.AddPoint(l);
-            }
-            pl.SetFillColor(svg::Color{});
-            pl.SetStrokeWidth(line_width_);
-            pl.SetStrokeColor(color_);
-            pl.SetStrokeLineCap(svg::StrokeLineCap::ROUND);
-            pl.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-
-            container.Add(pl);
-        }
+        explicit Route(std::vector<svg::Point>&& points, double line_width, svg::Color color);
+        void Draw(svg::ObjectContainer& container) const override;
     };
 
     class RouteText : public svg::Drawable {
@@ -158,20 +137,7 @@ struct MapRenderer
                            uint32_t font_size,
                            const std::string& font_family,
                            const std::string& font_weight,
-                           const std::string& text)
-        {
-            text_.SetFillColor(fill)
-                 .SetStrokeColor(stroke)
-                 .SetStrokeWidth(stroke_width)
-                 .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-                 .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND)
-                 .SetPosition(pos)
-                 .SetOffset(offset)
-                 .SetFontSize(font_size)
-                 .SetFontFamily(font_family)
-                 .SetFontWeight(font_weight)
-                 .SetData(text);
-        }
+                           const std::string& text);
 
         explicit RouteText(svg::Color fill,
                            svg::Point pos,
@@ -179,18 +145,7 @@ struct MapRenderer
                            uint32_t font_size,
                            const std::string& font_family,
                            const std::string& font_weight,
-                           const std::string& text)
-        {
-            text_.SetFillColor(fill)
-                 .SetPosition(pos)
-                 .SetOffset(offset)
-                 .SetFontSize(font_size)
-                 .SetFontFamily(font_family)
-                 .SetFontWeight(font_weight)
-                 .SetData(text);
-        }
-
-
+                           const std::string& text);
 
         explicit RouteText(svg::Color fill,
                            svg::Color stroke,
@@ -199,37 +154,16 @@ struct MapRenderer
                            svg::Point offset,
                            uint32_t font_size,
                            const std::string& font_family,
-                           const std::string& text)
-        {
-            text_.SetFillColor(fill)
-                 .SetStrokeColor(stroke)
-                 .SetStrokeWidth(stroke_width)
-                 .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-                 .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND)
-                 .SetPosition(pos)
-                 .SetOffset(offset)
-                 .SetFontSize(font_size)
-                 .SetFontFamily(font_family)
-                 .SetData(text);
-        }
+                           const std::string& text);
 
         explicit RouteText(svg::Color fill,
                            svg::Point pos,
                            svg::Point offset,
                            uint32_t font_size,
                            const std::string& font_family,
-                           const std::string& text)
-        {
-            text_.SetFillColor(fill)
-                 .SetPosition(pos)
-                 .SetOffset(offset)
-                 .SetFontSize(font_size)
-                 .SetFontFamily(font_family)
-                 .SetData(text);
-        }
-        void Draw(svg::ObjectContainer& container) const override {
-            container.Add(text_);
-        }
+                           const std::string& text);
+
+        void Draw(svg::ObjectContainer& container) const override;
     };
 
 
@@ -238,17 +172,8 @@ struct MapRenderer
 
     public:
         ~StopCircle() = default;
-        explicit StopCircle(svg::Point pos, double radius, const std::string& fill)
-            : circle_{}
-        {
-            circle_.SetCenter(pos)
-                   .SetRadius(radius)
-                   .SetFillColor(fill);
-        }
-
-        void Draw(svg::ObjectContainer& container) const override {
-            container.Add(circle_);
-        }
+        explicit StopCircle(svg::Point pos, double radius, const std::string& fill);
+        void Draw(svg::ObjectContainer& container) const override;
     };
 
     void MakeDoc(svg::Document& doc, const std::unordered_map<std::string_view, std::pair<domain::Bus*, std::vector<const domain::Stop*>>>& allBuses) const;
