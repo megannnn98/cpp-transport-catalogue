@@ -19,7 +19,7 @@ class RequestHandler
     const TransportCatalogue& db_;
     const renderer::MapRenderer renderer_;
 public:
-    explicit RequestHandler(const TransportCatalogue& db, const renderer::RenderSettings& settings);
+    RequestHandler(const TransportCatalogue& db, const renderer::RenderSettings& settings);
     [[nodiscard]] const std::unordered_set<const domain::Bus*>& GetBusesFromStop(std::string_view name) const;
     [[nodiscard]] const domain::Stop& GetStop(std::string_view name) const;
     [[nodiscard]] const domain::Bus& GetBus(std::string_view name) const;

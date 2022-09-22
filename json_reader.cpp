@@ -4,6 +4,96 @@ json::JsonReader::JsonReader(std::istream& is)
     : is_{is}, doc_{json::Load(is_)}
 {}
 
+void json::JsonReader::ExtractStopsWithCoords(tc::TransportCatalogue& tc, const json::Array& arr)
+{
+    using namespace std::literals;
+    auto extractStop = [](const json::Dict& dict) -> domain::Stop {
+        return { dict.at("name"s).AsString(), {dict.at("latitude"s).AsDouble(), dict.at("longitude"s).AsDouble()}};
+    };
+
+    for (const auto& arr: arr) {
+
+        auto it = arr.AsDict().find("type"s);
+        if (it != arr.AsDict().cend() && it->second == "Stop"s)
+        {
+            domain::Stop stop{extractStop(arr.AsDict())};
+            tc.AddStop(stop.name, stop.coord);
+        }
+    }
+}
+
+void json::JsonReader::ExtractBusWithStops(tc::TransportCatalogue& tc, const json::Array& arr)
+{
+    using namespace std::literals;
+    auto extractBus = [](const json::Dict& dict, std::vector<std::string>& stopNames) -> domain::Bus {
+        domain::Bus ret{dict.at("name"s).AsString(), dict.at("is_roundtrip"s).AsBool()};
+
+        auto it = dict.find("stops"s);
+        std::stack<std::string> circleStopHolder{};
+        for (const auto& stop: it->second.AsArray()) {
+            stopNames.push_back(stop.AsString());
+            if (!ret.isCircle)
+            {
+                circleStopHolder.push(stop.AsString());
+            }
+        }
+        if (!circleStopHolder.empty()) {
+            circleStopHolder.pop();
+            while (!circleStopHolder.empty()) {
+                stopNames.push_back(circleStopHolder.top());
+                circleStopHolder.pop();
+            }
+        }
+
+        return ret;
+    };
+
+    for (const auto& arr: arr) {
+        auto it = arr.AsDict().find("type"s);
+        if (it != arr.AsDict().cend() && it->second == "Bus"s)
+        {
+            std::vector<std::string> stopNames{};
+            domain::Bus bus{extractBus(arr.AsMap(), stopNames)};
+            tc.AddBus(bus.name, stopNames, bus.isCircle);
+        }
+    }
+}
+
+void json::JsonReader::ExtractDistancesBetweenStops(tc::TransportCatalogue& tc, const json::Array& arr)
+{
+    using namespace std::literals;
+    auto extractDistance = [](const json::Dict& dict, tc::TransportCatalogue::RetParseDistancesBetween& distances) {
+
+        const std::string& from{dict.at("name"s).AsString()};
+        const json::Dict& toStops{dict.at("road_distances"s).AsDict()};
+
+        for (auto& [name, dist]: toStops) {
+            distances.push_back(std::make_tuple(from, name, dist.AsInt()));
+        }
+    };
+
+    for (const auto& arr: arr) {
+        auto it = arr.AsDict().find("type"s);
+        if (it != arr.AsDict().cend() && it->second == "Stop"s)
+        {
+            tc::TransportCatalogue::RetParseDistancesBetween distances{};
+            extractDistance(arr.AsMap(), distances);
+            tc.AddDistances(std::move(distances));
+        }
+    }
+}
+
+void json::JsonReader::AddBusesToStops(tc::TransportCatalogue& tc)
+{
+    for (auto& [busname, busStopsPair]: tc.GetBuses())
+    {
+        for (const domain::Stop* stop: busStopsPair.second )
+        {
+            tc.AddBusToStop(stop->name, busname);
+        }
+    }
+}
+
 tc::TransportCatalogue json::JsonReader::MakeCatalogue()
 {
     using namespace std::literals;
@@ -14,93 +104,10 @@ tc::TransportCatalogue json::JsonReader::MakeCatalogue()
         return tc;
     }
 
-    {
-        auto extractStop = [](const json::Dict& dict) -> domain::Stop {
-            return { dict.at("name"s).AsString(), {dict.at("latitude"s).AsDouble(), dict.at("longitude"s).AsDouble()}};
-        };
-
-        for (const auto& arr: baseIt->second.AsArray()) {
-
-            auto it = arr.AsDict().find("type"s);
-            if (it != arr.AsDict().cend() && it->second == "Stop"s)
-            {
-                domain::Stop stop{extractStop(arr.AsDict())};
-                tc.AddStop(stop.name, stop.coord);
-            }
-        }
-
-    } // first
-
-    {
-
-        auto extractBus = [](const json::Dict& dict, std::vector<std::string>& stopNames) -> domain::Bus {
-            domain::Bus ret{dict.at("name"s).AsString(), dict.at("is_roundtrip"s).AsBool()};
-
-            auto it = dict.find("stops"s);
-            std::stack<std::string> circleStopHolder{};
-            for (const auto& stop: it->second.AsArray()) {
-                stopNames.push_back(stop.AsString());
-                if (!ret.isCircle)
-                {
-                    circleStopHolder.push(stop.AsString());
-                }
-            }
-            if (!circleStopHolder.empty()) {
-                circleStopHolder.pop();
-                while (!circleStopHolder.empty()) {
-                    stopNames.push_back(circleStopHolder.top());
-                    circleStopHolder.pop();
-                }
-            }
-
-            return ret;
-        };
-
-        for (const auto& arr: baseIt->second.AsArray()) {
-            auto it = arr.AsDict().find("type"s);
-            if (it != arr.AsDict().cend() && it->second == "Bus"s)
-            {
-                std::vector<std::string> stopNames{};
-                domain::Bus bus{extractBus(arr.AsMap(), stopNames)};
-                tc.AddBus(bus.name, stopNames, bus.isCircle);
-            }
-        }
-    } // second
-
-    {
-        auto extractDistance = [](const json::Dict& dict, tc::TransportCatalogue::RetParseDistancesBetween& distances) {
-
-            const std::string& from{dict.at("name"s).AsString()};
-            const json::Dict& toStops{dict.at("road_distances"s).AsDict()};
-
-            for (auto& [name, dist]: toStops) {
-                distances.push_back(std::make_tuple(from, name, dist.AsInt()));
-            }
-        };
-
-        for (const auto& arr: baseIt->second.AsArray()) {
-            auto it = arr.AsDict().find("type"s);
-            if (it != arr.AsDict().cend() && it->second == "Stop"s)
-            {
-                tc::TransportCatalogue::RetParseDistancesBetween distances{};
-                extractDistance(arr.AsMap(), distances);
-                tc.AddDistances(std::move(distances));
-            }
-        }
-    } // third
-
-    auto addBusesToStops = [&tc]{
-
-        for (auto& [busname, busStopsPair]: tc.GetBuses())
-        {
-            for (const domain::Stop* stop: busStopsPair.second )
-            {
-                tc.AddBusToStop(stop->name, busname);
-            }
-        }
-    };
-
-    addBusesToStops();
+    ExtractStopsWithCoords(tc, baseIt->second.AsArray());
+    ExtractBusWithStops(tc, baseIt->second.AsArray());
+    ExtractDistancesBetweenStops(tc, baseIt->second.AsArray());
+    AddBusesToStops(tc);
 
     return tc;
 }
@@ -122,19 +129,18 @@ void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os
 
         if (type == "Stop"s) {
 
-            auto PrintStop = [&handler, &id](json::Array& arr, std::string_view name) {
+            json::Dict dict{};
+            json::Array arrBuses{};
+            dict["request_id"s] = id;
+            std::string_view name = arr.AsMap().at("name"s).AsString();
 
-                json::Dict dict{};
-                json::Array arrBuses{};
-                dict["request_id"s] = id;
 
-                if (handler.GetStop(name).name.empty())
-                {
-                    dict["error_message"s] = "not found"s;
-                    arr.push_back(std::move(dict));
-                    return;
-                }
-
+            if (handler.GetStop(name).name.empty())
+            {
+                dict["error_message"s] = "not found"s;
+            }
+            else
+            {
                 auto buses = handler.GetBusesFromStop(name);
                 for (const auto& b: buses)
                 {
@@ -146,26 +152,23 @@ void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os
                 });
 
                 dict["buses"] = std::move(arrBuses);
-                arr.push_back(std::move(dict));
-            };
+            }
 
-            std::string_view name = arr.AsMap().at("name"s).AsString();
-            PrintStop(mainArr, name);
+            mainArr.push_back(std::move(dict));
         }
-
         else if (type == "Bus"s) {
 
-            auto PrintBus = [&handler, &id](json::Array& arr, std::string_view name) {
-              json::Dict dict{};
-              auto bus = handler.GetBus(name);
+          std::string_view name = arr.AsMap().at("name"s).AsString();
+          json::Dict dict{};
+          auto bus = handler.GetBus(name);
 
-              dict["request_id"s] = id;
-              if (bus.name.empty()) {
+          dict["request_id"s] = id;
+          if (bus.name.empty())
+          {
                 dict["error_message"s] = "not found"s;
-                arr.push_back(std::move(dict));
-                return;
-              }
-
+          }
+          else
+          {
               auto uniqCalc = [](const std::vector<const domain::Stop *> &stops) -> size_t {
                 std::unordered_set<std::string_view> uniqueStops{};
                 std::for_each(
@@ -195,12 +198,8 @@ void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os
               dict["route_length"] = realDistance;
               dict["stop_count"] = static_cast<int>(stops.size());
               dict["unique_stop_count"] = static_cast<int>(uniqCalc(stops));
-
-              arr.push_back(std::move(dict));
-            };
-
-            std::string_view name = arr.AsMap().at("name"s).AsString();
-            PrintBus(mainArr, name);
+          }
+          mainArr.push_back(std::move(dict));
         }
         else if (type == "Map"s) {
             svg::Document doc;

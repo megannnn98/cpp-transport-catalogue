@@ -121,7 +121,7 @@ struct MapRenderer
 
     public:
         ~Route() = default;
-        explicit Route(std::vector<svg::Point>&& points, double line_width, svg::Color color);
+        Route(std::vector<svg::Point>&& points, double line_width, svg::Color color);
         void Draw(svg::ObjectContainer& container) const override;
     };
 
@@ -129,7 +129,7 @@ struct MapRenderer
         svg::Text text_{};
     public:
         ~RouteText() = default;
-        explicit RouteText(svg::Color fill,
+        RouteText(svg::Color fill,
                            svg::Color stroke,
                            double stroke_width,
                            svg::Point pos,
@@ -139,7 +139,7 @@ struct MapRenderer
                            const std::string& font_weight,
                            const std::string& text);
 
-        explicit RouteText(svg::Color fill,
+        RouteText(svg::Color fill,
                            svg::Point pos,
                            svg::Point offset,
                            uint32_t font_size,
@@ -147,7 +147,7 @@ struct MapRenderer
                            const std::string& font_weight,
                            const std::string& text);
 
-        explicit RouteText(svg::Color fill,
+        RouteText(svg::Color fill,
                            svg::Color stroke,
                            double stroke_width,
                            svg::Point pos,
@@ -156,7 +156,7 @@ struct MapRenderer
                            const std::string& font_family,
                            const std::string& text);
 
-        explicit RouteText(svg::Color fill,
+        RouteText(svg::Color fill,
                            svg::Point pos,
                            svg::Point offset,
                            uint32_t font_size,
@@ -172,7 +172,7 @@ struct MapRenderer
 
     public:
         ~StopCircle() = default;
-        explicit StopCircle(svg::Point pos, double radius, const std::string& fill);
+        StopCircle(svg::Point pos, double radius, const std::string& fill);
         void Draw(svg::ObjectContainer& container) const override;
     };
 
