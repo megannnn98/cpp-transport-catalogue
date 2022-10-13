@@ -10,3 +10,7 @@ transport.creator.user
 transport.cxxflags
 transport.files
 transport.includes
+.qtc_clangd
+CMakeLists.txt.user
+CMakeLists.txt.user.c8afd38
+transp.creator.user

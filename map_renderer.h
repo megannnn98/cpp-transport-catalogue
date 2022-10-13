@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <unordered_map>
 
 #include "svg.h"
 #include "geo.h"
