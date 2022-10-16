@@ -25,6 +25,8 @@ set (SRCS
     json.h
     json_reader.cpp
     json_reader.h
+    json_builder.cpp
+    json_builder.h
     main.cpp
     map_renderer.cpp
     map_renderer.h
