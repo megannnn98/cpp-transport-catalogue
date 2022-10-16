@@ -1,4 +1,5 @@
 #include "json_reader.h"
+#include "json_builder.h"
 
 json::JsonReader::JsonReader(std::istream& is)
     : is_{is}, doc_{json::Load(is_)}
@@ -53,7 +54,7 @@ void json::JsonReader::ExtractBusWithStops(tc::TransportCatalogue& tc, const jso
         if (it != arr.AsDict().cend() && it->second == "Bus"s)
         {
             std::vector<std::string> stopNames{};
-            domain::Bus bus{extractBus(arr.AsMap(), stopNames)};
+            domain::Bus bus{extractBus(arr.AsDict(), stopNames)};
             tc.AddBus(bus.name, stopNames, bus.isCircle);
         }
     }
@@ -77,7 +78,7 @@ void json::JsonReader::ExtractDistancesBetweenStops(tc::TransportCatalogue& tc, 
         if (it != arr.AsDict().cend() && it->second == "Stop"s)
         {
             tc::TransportCatalogue::RetParseDistancesBetween distances{};
-            extractDistance(arr.AsMap(), distances);
+            extractDistance(arr.AsDict(), distances);
             tc.AddDistances(std::move(distances));
         }
     }
@@ -99,8 +100,8 @@ tc::TransportCatalogue json::JsonReader::MakeCatalogue()
     using namespace std::literals;
     tc::TransportCatalogue tc{};
 
-    const auto baseIt = doc_.GetRoot().AsMap().find("base_requests"s);
-    if (baseIt == doc_.GetRoot().AsMap().cend()) {
+    const auto baseIt = doc_.GetRoot().AsDict().find("base_requests"s);
+    if (baseIt == doc_.GetRoot().AsDict().cend()) {
         return tc;
     }
 
@@ -112,7 +113,7 @@ tc::TransportCatalogue json::JsonReader::MakeCatalogue()
     return tc;
 }
 
-json::Dict json::JsonReader::GenStop(int id, const tc::RequestHandler& handler, const json::Node& source) const
+json::Node json::JsonReader::GenStop(int id, const tc::RequestHandler& handler, const json::Node& source) const
 {
     using namespace std::literals;
     json::Dict dict{};
@@ -121,7 +122,9 @@ json::Dict json::JsonReader::GenStop(int id, const tc::RequestHandler& handler, 
 
     if (handler.GetStop(name).name.empty())
     {
-        dict["error_message"s] = "not found"s;
+        return json::Builder{}.
+                StartDict().Key("error_message").Value("not found"s).EndDict().
+                Build();
     }
     else
     {
@@ -136,22 +139,25 @@ json::Dict json::JsonReader::GenStop(int id, const tc::RequestHandler& handler, 
                                           b.AsString().begin(), b.AsString().end());
         });
 
-        dict["buses"] = std::move(arrBuses);
+        return json::Builder{}.
+                StartDict().Key("buses").Value(std::move(arrBuses)).EndDict().
+                Build();
     }
-    return dict;
 }
 
-json::Dict json::JsonReader::GenBus(int id, const tc::RequestHandler& handler, const json::Node& source) const
+json::Node json::JsonReader::GenBus(int id, const tc::RequestHandler& handler, const json::Node& source) const
 {
     using namespace std::literals;
-    std::string_view name = source.AsMap().at("name"s).AsString();
+    std::string_view name = source.AsDict().at("name"s).AsString();
     json::Dict dict{};
     auto bus = handler.GetBus(name);
 
     dict["request_id"s] = id;
     if (bus.name.empty())
     {
-          dict["error_message"s] = "not found"s;
+        return json::Builder{}.
+              StartDict().Key("error_message").Value("not found"s).EndDict().
+              Build();
     }
     else
     {
@@ -180,35 +186,38 @@ json::Dict json::JsonReader::GenBus(int id, const tc::RequestHandler& handler, c
           it = std::next(it);
         }
 
-        dict["curvature"] = realDistance / directDistance;
-        dict["route_length"] = realDistance;
-        dict["stop_count"] = static_cast<int>(stops.size());
-        dict["unique_stop_count"] = static_cast<int>(uniqCalc(stops));
+        return json::Builder{}.
+                StartDict().
+                    Key("curvature").Value(realDistance / directDistance).
+                    Key("route_length").Value(realDistance).
+                    Key("stop_count").Value(static_cast<int>(stops.size())).
+                    Key("unique_stop_count").Value(static_cast<int>(uniqCalc(stops))).
+                EndDict().
+                Build();
     }
 
     return dict;
 }
 
-json::Dict json::JsonReader::GenMap(int id, const tc::RequestHandler& handler) const
+json::Node json::JsonReader::GenMap(int id, const tc::RequestHandler& handler) const
 {
     using namespace std::literals;
     svg::Document doc;
     handler.MakeDoc(doc);
     std::ostringstream stream;
     doc.Render(stream);
-    json::Dict dict{};
 
-    dict["map"s] = stream.str();
-    dict["request_id"s] = id;
-
-    return dict;
+    return Builder{}.StartDict()
+                        .Key("map"s).Value(stream.str())
+                        .Key("request_id"s).Value(id)
+                    .EndDict().Build();
 }
 
 void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os) const
 {
     using namespace std::literals;
-    const auto baseIt = doc_.GetRoot().AsMap().find("stat_requests"s);
-    if (baseIt == doc_.GetRoot().AsMap().cend()) {
+    const auto baseIt = doc_.GetRoot().AsDict().find("stat_requests"s);
+    if (baseIt == doc_.GetRoot().AsDict().cend()) {
         return;
     }
 
@@ -216,8 +225,8 @@ void json::JsonReader::Print(const tc::RequestHandler& handler, std::ostream& os
 
     json::Array mainArr{};
     for (const auto& arr: requests) {
-        std::string_view type = arr.AsMap().at("type"s).AsString();
-        int id = arr.AsMap().at("id"s).AsInt();
+        std::string_view type = arr.AsDict().at("type"s).AsString();
+        int id = arr.AsDict().at("id"s).AsInt();
 
         if (type == "Stop"s) {
             mainArr.push_back(std::move(GenStop(id, handler, arr)));
@@ -236,8 +245,8 @@ renderer::RenderSettings json::JsonReader::MakeRenderSettings()
 {
     renderer::RenderSettings rs{};
     using namespace std::literals;
-    const auto baseIt = doc_.GetRoot().AsMap().find("render_settings"s);
-    if (baseIt == doc_.GetRoot().AsMap().cend()) {
+    const auto baseIt = doc_.GetRoot().AsDict().find("render_settings"s);
+    if (baseIt == doc_.GetRoot().AsDict().cend()) {
         return rs;
     }
 

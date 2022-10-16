@@ -21,9 +21,9 @@ public:
     tc::TransportCatalogue MakeCatalogue();
     void Print(const tc::RequestHandler& handler, std::ostream& os) const;
     renderer::RenderSettings MakeRenderSettings();
-    json::Dict GenStop(int id, const tc::RequestHandler& handler, const json::Node& source) const;
-    json::Dict GenBus(int id, const tc::RequestHandler& handler, const json::Node& source) const;
-    json::Dict GenMap(int id, const tc::RequestHandler& handler) const;
+    json::Node GenStop(int id, const tc::RequestHandler& handler, const json::Node& source) const;
+    json::Node GenBus(int id, const tc::RequestHandler& handler, const json::Node& source) const;
+    json::Node GenMap(int id, const tc::RequestHandler& handler) const;
 };
 
 } // namespace

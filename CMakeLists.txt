@@ -2,7 +2,7 @@
 # You may attempt to use it for building too, by modifying this file here.
 
 cmake_minimum_required(VERSION 3.5)
-project(foo)
+project(transport)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
@@ -23,10 +23,10 @@ set (SRCS
     geo.h
     json.cpp
     json.h
-    json_reader.cpp
-    json_reader.h
     json_builder.cpp
     json_builder.h
+    json_reader.cpp
+    json_reader.h
     main.cpp
     map_renderer.cpp
     map_renderer.h
