@@ -21,21 +21,26 @@ set (SRCS
     domain.h
     geo.cpp
     geo.h
-    json.cpp
-    json.h
+    graph.h
     json_builder.cpp
     json_builder.h
     json_reader.cpp
     json_reader.h
+    json.cpp
+    json.h
     main.cpp
     map_renderer.cpp
     map_renderer.h
+    ranges.h
     request_handler.cpp
     request_handler.h
+    router.h
     svg.cpp
     svg.h
     transport_catalogue.cpp
     transport_catalogue.h
+    transport_router.cpp
+    transport_router.h
 )
 
 

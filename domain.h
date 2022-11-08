@@ -1,21 +1,30 @@
 #pragma once
-
 #include <string>
+#include <vector>
 #include "geo.h"
 
 namespace domain {
-struct Stop
-{
-    bool operator==(const domain::Stop& other) const;
-    std::string name;
-    geo::Coordinates coord;
-};
 
-struct Bus
-{
-    bool operator==(const domain::Bus& other) const;
-    std::string name;
-    bool isCircle{};
-};
+    struct Stop {
+        std::string name;
+        geo::Coordinates coordinates;
+        int id_;
+    };
 
-}// namespace domain
+    struct Bus {
+        std::string name;
+        bool is_rounded;
+        std::vector<const Stop*> route;
+        double distance_real;
+        double distance_ideal;
+    };
+
+    struct Statistics {
+        bool found;
+        bool is_rounded;
+        size_t stops_count;
+        size_t unique_stops_count;
+        double distance;
+        double curvature;
+    };
+} // namespace domain
