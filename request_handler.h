@@ -1,48 +1,32 @@
 #pragma once
-#include "json.h"
+
 #include "transport_catalogue.h"
 #include "transport_router.h"
+#include "domain.h"
+#include "json.h"
 #include "map_renderer.h"
+#include "json_builder.h"
 
-namespace request_handler {
+#include <utility>
+#include <string>
+#include <string_view>
 
-    class RequestHandler {
-    public:
-        RequestHandler(tc::TransportCatalogue& db, renderer::MapRenderer& renderer);
-        std::optional<domain::Statistics> GetBusStat(const std::string_view& bus_name) const;
-        const std::optional<std::set<std::string_view>> GetBusesByStop(const std::string_view& stop_name) const;
-        const std::vector<geo::Coordinates> GetAllStopCoordinates() const;
-        const std::set<std::string_view> GetAllBusesNames() const;
-        const std::vector<std::string_view> GetBusRoute(const std::string_view bus_name) const;
-        const geo::Coordinates GetStopCoordinates(const std::string_view stop_name) const;
-        void AddStopToCatalogue(std::string stop_name, double latitude, double longitude, int id);
-        void AddStopDistancesToCatalogue(std::string& stop_name, std::vector<std::pair<std::string, int>> stop_to_distance);
-        void AddBusToCatalogue(std::string& bus_name, std::vector<std::string>& route, bool is_rounded);
-        void SetWidthToRenderer(double width);
-        void SetHeightToRenderer(double height);
-        void SetPaddingToRenderer(double padding);
-        void SetLineWidthToRenderer(double line_width);
-        void SetStopRadiusToRenderer(double stop_radius);
-        void SetBusLabelFontSizeToRenderer(int bus_label_font_size);
-        void SetBusLabelOffsetToRenderer(const json::Array& as_array);
-        void SetStopLabelFontSizeToRenderer(int stop_label_font_size);
-        void SetStopLabelOffsetToRenderer(const json::Array& as_array);
-        void SetUnderlayerColorToRenderer(const json::Node& node);
-        void SetUnderlayerWidthToRenderer(double underlayer_width);
-        void SetColorPaletteToRenderer(const json::Array& as_array);
-        void RenderMap(svg::Document& doc);
-        void SetBusVelocity(int velocity);
-        void SetBusWaitTime(int time);
-        void BuildGraph();
-        json::Array ParseStatRequests(const json::Node& node);
-    private:
-        tc::TransportCatalogue& db_;
-        renderer::MapRenderer& renderer_;
-        transport_router::TransportRouter router_;
-        json::Node MakeJsonOutputBus(const json::Node& node);
-        json::Node MakeJsonOutputStop(const json::Node& node);
-        json::Node MakeJsonOutputMap(const json::Node& node, svg::Document& map);
-        json::Node MakeJsonOutputRoute(const json::Node& node, std::optional<std::vector<transport_router::EdgeInfo>> info);
-    };
+class RequestHandler {
+public:
+    RequestHandler(const transport::Catalogue& catalogue,
+        const transport::Router& router, const renderer::MapRenderer& renderer);
 
-} // namespace request
+    void JsonStatRequests(const json::Node& json_doc, std::ostream& output);
+
+    svg::Document RenderMap() const;
+
+private:
+    const transport::Catalogue& db_;
+    const transport::Router& router_;
+    const renderer::MapRenderer& renderer_;
+
+    json::Node FindStopRequestProcessing(const json::Dict& request_map);
+    json::Node FindBusRequestProcessing(const json::Dict& request_map);
+    json::Node BuildMapRequestProcessing(const json::Dict& request_map);
+    json::Node BuildRouteRequestProcessing(const json::Dict& request_map);
+};

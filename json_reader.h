@@ -1,40 +1,50 @@
 #pragma once
 
-#include <iostream>
-#include <string>
 #include "json.h"
-#include "request_handler.h"
+#include "transport_catalogue.h"
+#include "domain.h"
+
+#include <unordered_map>
+#include <string>
+#include <string_view>
+#include <vector>
 
 class JsonReader {
 public:
-    struct StopInput {
-        std::string name;
-        double latitude;
-        double longitude;
-    };
+    JsonReader(json::Document input_json)
+        : input_(input_json) {}
 
-    struct StopDistancesInput {
-        std::string name;
-        std::vector<std::pair<std::string, int>> stop_to_distance;
-    };
+    const json::Node& GetBaseRequest() const;
 
-    struct BusInput {
-        std::string name;
-        std::vector<std::string> route;
-        bool is_rounded;
-    };
+    const json::Node& GetStatRequest() const;
 
-    JsonReader();
-    std::string Print(const json::Node& node);
-    void ParseInput(std::istream& input);
-    BusInput ParseBusInput(const json::Node& node);
-    StopInput ParseStopInput(const json::Node& node);
-    StopDistancesInput ParseStopWithDistanceInput(const json::Node& array);
-    void ParseBaseRequests(const json::Node& array);
-    void ParseRenderSettings(const json::Node& node);
+    const json::Node& GetRenderSettings() const;
+
+    const json::Node& GetRoutingSettings() const;
+
+    const json::Node& GetSerializationSettings() const;
+
+    void FillCatalogue(transport::Catalogue& catalogue) const;
+
 private:
-    tc::TransportCatalogue catalogue_;
-    renderer::MapRenderer map_renderer_;
-    request_handler::RequestHandler handler;
-};
+    json::Document input_;
+    json::Node dumm_{ nullptr };
 
+    struct Bus_info {
+        std::vector<std::string_view> stops;
+        std::string_view final_stop;
+        bool is_circle;
+    };
+
+    using StopsDistMap = std::unordered_map<std::string_view, std::unordered_map<std::string_view, int>>;
+    using BusesInfoMap = std::unordered_map<std::string_view, Bus_info>;
+
+    void ParseStopAddRequest(transport::Catalogue& catalogue, const json::Dict& request_map,
+        StopsDistMap& stop_to_stops_distance) const;
+    void SetStopsDistances(transport::Catalogue& catalogue,
+        const StopsDistMap& stop_to_stops_distance) const;
+    void ParseBusAddRequest(const json::Dict& request_map, BusesInfoMap& buses_info) const;
+    void BusesAddProcess(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
+    void SetFinals(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
+
+};
