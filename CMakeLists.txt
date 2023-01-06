@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.11)
 
 project(TransportCatalogue CXX)
@@ -6,9 +7,51 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS transport_catalogue.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS transport_catalogue.proto svg.proto map_renderer.proto )
 
-set(TCAT_FILES main.cpp domain.h domain.cpp geo.h geo.cpp graph.h json.h json.cpp json_builder.h json_builder.cpp json_reader.h json_reader.cpp map_renderer.h map_renderer.cpp ranges.h request_handler.h request_handler.cpp router.h serialization.h serialization.cpp svg.h svg.cpp transport_catalogue.h transport_catalogue.cpp transport_router.h transport_router.cpp transport_catalogue.proto  )
+
+set(SOURCES 
+        main.cpp 
+        domain.cpp 
+        geo.cpp 
+        json.cpp 
+        json_builder.cpp 
+        json_reader.cpp 
+        map_renderer.cpp 
+        request_handler.cpp 
+        serialization.cpp 
+        svg.cpp 
+        transport_catalogue.cpp 
+        transport_router.cpp)
+
+set(HEADERS 
+        domain.h 
+        geo.h
+        graph.h 
+        json.h
+        json_builder.h
+        json_reader.h
+        map_renderer.h 
+        ranges.h 
+        request_handler.h  
+        router.h 
+        serialization.h 
+        svg.h 
+        transport_catalogue.h 
+        transport_router.h 
+        )
+
+SET(PROTO 
+        transport_catalogue.proto 
+        svg.proto 
+        map_renderer.proto
+        )
+
+set(TCAT_FILES 
+        ${SOURCES}
+        ${HEADERS}
+        ${PROTO}
+         )
 
 add_executable(transport_catalogue ${PROTO_SRCS} ${PROTO_HDRS} ${TCAT_FILES})
 target_include_directories(transport_catalogue PUBLIC ${Protobuf_INCLUDE_DIRS})

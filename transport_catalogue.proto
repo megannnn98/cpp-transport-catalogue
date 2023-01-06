@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package serialize;
 
+import "map_renderer.proto";
+
 message Stop {
     string name = 1;
     repeated double coordinate = 2;
@@ -19,4 +21,5 @@ message Bus {
 message TransportCatalogue {
     repeated Stop stop = 1;
     repeated Bus bus = 2;
+    RenderSettings render_settings = 3;
 }
