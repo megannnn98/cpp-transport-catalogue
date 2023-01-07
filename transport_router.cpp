@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace transport {
+namespace tc {
 
     Router::Router(const json::Node& settings_node)
     {

@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-namespace transport {
+namespace tc {
 
     class Router {
     public:
@@ -55,4 +55,4 @@ namespace transport {
         void SetSettings(const json::Node& settings_node);
     };
 
-} // namespace transport
+} // namespace tc

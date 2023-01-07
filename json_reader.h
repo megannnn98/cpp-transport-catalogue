@@ -24,7 +24,7 @@ public:
 
     const json::Node& GetSerializationSettings() const;
 
-    void FillCatalogue(transport::Catalogue& catalogue) const;
+    void FillCatalogue(tc::Catalogue& catalogue) const;
 
 private:
     json::Document input_;
@@ -39,12 +39,12 @@ private:
     using StopsDistMap = std::unordered_map<std::string_view, std::unordered_map<std::string_view, int>>;
     using BusesInfoMap = std::unordered_map<std::string_view, Bus_info>;
 
-    void ParseStopAddRequest(transport::Catalogue& catalogue, const json::Dict& request_map,
+    void ParseStopAddRequest(tc::Catalogue& catalogue, const json::Dict& request_map,
         StopsDistMap& stop_to_stops_distance) const;
-    void SetStopsDistances(transport::Catalogue& catalogue,
+    void SetStopsDistances(tc::Catalogue& catalogue,
         const StopsDistMap& stop_to_stops_distance) const;
     void ParseBusAddRequest(const json::Dict& request_map, BusesInfoMap& buses_info) const;
-    void BusesAddProcess(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
-    void SetFinals(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
+    void BusesAddProcess(tc::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
+    void SetFinals(tc::Catalogue& catalogue, const BusesInfoMap& buses_info) const;
 
 };

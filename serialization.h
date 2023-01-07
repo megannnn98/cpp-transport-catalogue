@@ -10,19 +10,20 @@
 
 #include <transport_catalogue.pb.h>
 
-void Serialize(const transport::Catalogue& tcat,
+void Serialize(const tc::Catalogue& tcat,
     const renderer::MapRenderer& renderer,
-    const transport::Router& router,
+    const tc::Router& router,
     std::ostream& output);
 
-serialize::Stop Serialize(const transport::Stop* stop);
+serialize::Stop Serialize(const tc::Stop* stop);
 
-serialize::Bus Serialize(const transport::Bus* bus);
+serialize::Bus Serialize(const tc::Bus* bus);
 
 serialize::RenderSettings GetRenderSettingSerialize(const json::Node& render_settings);
 
 serialize::RouterSettings GetRouterSettingSerialize(const json::Node& router_settings);
 
-serialize::Router Serialize(const transport::Router& router);
+serialize::Router Serialize(const tc::Router& router);
 
-std::tuple<transport::Catalogue, renderer::MapRenderer, transport::Router> Deserialize(std::istream& input);
+std::tuple<tc::Catalogue, renderer::MapRenderer, tc::Router,
+    graph::DirectedWeightedGraph<double>, std::map<std::string, graph::VertexId>> Deserialize(std::istream& input);

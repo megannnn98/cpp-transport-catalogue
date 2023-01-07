@@ -31,10 +31,10 @@ int main(int argc, char* argv[]) {
 
     if (mode == "make_base"sv) {
         JsonReader input_json(json::Load(std::cin));
-        transport::Catalogue tcat;
+        tc::Catalogue tcat;
         input_json.FillCatalogue(tcat);
         renderer::MapRenderer renderer(input_json.GetRenderSettings());
-        transport::Router router(input_json.GetRoutingSettings(), tcat);
+        tc::Router router(input_json.GetRoutingSettings(), tcat);
         std::ofstream fout(input_json.GetSerializationSettings().AsDict().at("file"s).AsString(), std::ios::binary);
         if (fout.is_open()) {
             Serialize(tcat, renderer, router, fout);
@@ -44,7 +44,8 @@ int main(int argc, char* argv[]) {
         JsonReader input_json(json::Load(std::cin));
         std::ifstream db_file(input_json.GetSerializationSettings().AsDict().at("file"s).AsString(), std::ios::binary);
         if (db_file) {
-            auto [tcat, renderer, router] = Deserialize(db_file);
+            auto [tcat, renderer, router, graph, stop_ids] = Deserialize(db_file);
+            router.SetGraph(std::move(graph), std::move(stop_ids));
             RequestHandler handler(tcat, router, renderer);
             handler.JsonStatRequests(input_json.GetStatRequest(), std::cout);
         }

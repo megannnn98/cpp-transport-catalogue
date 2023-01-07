@@ -36,7 +36,7 @@ const json::Node& JsonReader::GetSerializationSettings() const {
     else return dumm_;
 }
 
-void JsonReader::FillCatalogue(transport::Catalogue& catalogue) const
+void JsonReader::FillCatalogue(tc::Catalogue& catalogue) const
 {
     const json::Array& arr = GetBaseRequest().AsArray();
     StopsDistMap stop_to_stops_distance;
@@ -56,7 +56,7 @@ void JsonReader::FillCatalogue(transport::Catalogue& catalogue) const
     SetFinals(catalogue, buses_info);
 }
 
-void JsonReader::ParseStopAddRequest(transport::Catalogue& catalogue, const json::Dict& request_map,
+void JsonReader::ParseStopAddRequest(tc::Catalogue& catalogue, const json::Dict& request_map,
     StopsDistMap& stop_to_stops_distance) const
 {
     const string& stop_name = request_map.at("name"s).AsString();
@@ -69,7 +69,7 @@ void JsonReader::ParseStopAddRequest(transport::Catalogue& catalogue, const json
     }
 }
 
-void JsonReader::SetStopsDistances(transport::Catalogue& catalogue,
+void JsonReader::SetStopsDistances(tc::Catalogue& catalogue,
     const StopsDistMap& stop_to_stops_distance) const
 {
     for (const auto& [stop, near_stops] : stop_to_stops_distance) {
@@ -104,10 +104,10 @@ void JsonReader::ParseBusAddRequest(const json::Dict& request_map, BusesInfoMap&
     }
 }
 
-void JsonReader::BusesAddProcess(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const
+void JsonReader::BusesAddProcess(tc::Catalogue& catalogue, const BusesInfoMap& buses_info) const
 {
     for (const auto& [name, info] : buses_info) {
-        vector<transport::Stop*> stop_ptrs;
+        vector<tc::Stop*> stop_ptrs;
         const auto& stops = info.stops;
         stop_ptrs.reserve(stops.size());
         for (const auto& stop : stops) {
@@ -117,7 +117,7 @@ void JsonReader::BusesAddProcess(transport::Catalogue& catalogue, const BusesInf
     }
 }
 
-void JsonReader::SetFinals(transport::Catalogue& catalogue, const BusesInfoMap& buses_info) const
+void JsonReader::SetFinals(tc::Catalogue& catalogue, const BusesInfoMap& buses_info) const
 {
     for (auto& [bus_name, info] : buses_info) {
         if (domain::Bus* bus = catalogue.FindBus(bus_name)) {

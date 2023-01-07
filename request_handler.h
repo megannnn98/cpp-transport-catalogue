@@ -13,16 +13,16 @@
 
 class RequestHandler {
 public:
-    RequestHandler(const transport::Catalogue& catalogue,
-        const transport::Router& router, const renderer::MapRenderer& renderer);
+    RequestHandler(const tc::Catalogue& catalogue,
+        const tc::Router& router, const renderer::MapRenderer& renderer);
 
     void JsonStatRequests(const json::Node& json_doc, std::ostream& output);
 
     svg::Document RenderMap() const;
 
 private:
-    const transport::Catalogue& db_;
-    const transport::Router& router_;
+    const tc::Catalogue& db_;
+    const tc::Router& router_;
     const renderer::MapRenderer& renderer_;
 
     json::Node FindStopRequestProcessing(const json::Dict& request_map);

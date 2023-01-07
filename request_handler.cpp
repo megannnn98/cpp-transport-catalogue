@@ -5,11 +5,11 @@
 #include <unordered_set>
 
 using namespace std;
-using namespace transport;
+using namespace tc;
 using namespace domain;
 
-RequestHandler::RequestHandler(const transport::Catalogue& catalogue,
-    const transport::Router& router, const renderer::MapRenderer& renderer)
+RequestHandler::RequestHandler(const tc::Catalogue& catalogue,
+    const tc::Router& router, const renderer::MapRenderer& renderer)
     : db_(catalogue)
     , router_(router)
     , renderer_(renderer) {}
@@ -85,7 +85,7 @@ json::Node RequestHandler::FindBusRequestProcessing(const json::Dict& request_ma
         }
         double curvature = distance / straight_distance;
         unordered_set<string> unique_stops_set;
-        for (transport::Stop* s : bus->stops) {
+        for (tc::Stop* s : bus->stops) {
             unique_stops_set.emplace(s->name);
         }
         int unique_stops = unique_stops_set.size();
