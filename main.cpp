@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
         transport::Router router(input_json.GetRoutingSettings(), tcat);
         std::ofstream fout(input_json.GetSerializationSettings().AsDict().at("file"s).AsString(), std::ios::binary);
         if (fout.is_open()) {
-            Serialize(tcat, fout);
+            Serialize(tcat, renderer, router, fout);
         }
     }
     else if (mode == "process_requests"sv) {

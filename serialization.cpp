@@ -2,7 +2,9 @@
 
 using namespace std;
 
-void Serialize(const transport::Catalogue& tcat, std::ostream& output) {
+void Serialize(const transport::Catalogue& tcat,
+    const renderer::MapRenderer& renderer, const transport::Router& router,
+    std::ostream& output) {
     serialize::TransportCatalogue database;
     for (const auto& [name, s] : tcat.GetSortedAllStops()) {
         *database.add_stop() = Serialize(s);
@@ -10,6 +12,8 @@ void Serialize(const transport::Catalogue& tcat, std::ostream& output) {
     for (const auto& [name, b] : tcat.GetSortedAllBuses()) {
         *database.add_bus() = Serialize(b);
     }
+    *database.mutable_render_settings() = GetRenderSettingSerialize(renderer.GetRenderSettings());
+    *database.mutable_router() = Serialize(router);
     database.SerializeToOstream(&output);
 }
 
@@ -34,6 +38,73 @@ serialize::Bus Serialize(const transport::Bus* bus) {
     result.set_is_circle(bus->is_circle);
     if (bus->final_stop)
         result.set_final_stop(bus->final_stop->name);
+    return result;
+}
+
+serialize::Point GetPointSerialize(const json::Array& p) {
+    serialize::Point result;
+    result.set_x(p[0].AsDouble());
+    result.set_y(p[1].AsDouble());
+    return result;
+}
+
+serialize::Color GetColorSerialize(const json::Node& node) {
+    serialize::Color result;
+    if (node.IsArray()) {
+        const json::Array& arr = node.AsArray();
+        if (arr.size() == 3) {
+            serialize::RGB rgb;
+            rgb.set_red(arr[0].AsInt());
+            rgb.set_green(arr[1].AsInt());
+            rgb.set_blue(arr[2].AsInt());
+            *result.mutable_rgb() = rgb;
+        }
+        else if (arr.size() == 4) {
+            serialize::RGBA rgba;
+            rgba.set_red(arr[0].AsInt());
+            rgba.set_green(arr[1].AsInt());
+            rgba.set_blue(arr[2].AsInt());
+            rgba.set_opacity(arr[3].AsDouble());
+            *result.mutable_rgba() = rgba;
+        }
+    }
+    else if (node.IsString()) {
+        result.set_name(node.AsString());
+    }
+    return result;
+}
+
+serialize::RenderSettings GetRenderSettingSerialize(const json::Node& render_settings) {
+    const json::Dict& rs_map = render_settings.AsDict();
+    serialize::RenderSettings result;
+    result.set_width(rs_map.at("width"s).AsDouble());
+    result.set_height(rs_map.at("height"s).AsDouble());
+    result.set_padding(rs_map.at("padding"s).AsDouble());
+    result.set_stop_radius(rs_map.at("stop_radius"s).AsDouble());
+    result.set_line_width(rs_map.at("line_width"s).AsDouble());
+    result.set_bus_label_font_size(rs_map.at("bus_label_font_size"s).AsInt());
+    *result.mutable_bus_label_offset() = GetPointSerialize(rs_map.at("bus_label_offset"s).AsArray());
+    result.set_stop_label_font_size(rs_map.at("stop_label_font_size"s).AsInt());
+    *result.mutable_stop_label_offset() = GetPointSerialize(rs_map.at("stop_label_offset"s).AsArray());
+    *result.mutable_underlayer_color() = GetColorSerialize(rs_map.at("underlayer_color"s));
+    result.set_underlayer_width(rs_map.at("underlayer_width"s).AsDouble());
+    for (const auto& c : rs_map.at("color_palette"s).AsArray()) {
+        *result.add_color_palette() = GetColorSerialize(c);
+    }
+    return result;
+}
+
+serialize::RouterSettings GetRouterSettingSerialize(const json::Node& router_settings) {
+    const json::Dict& rs_map = router_settings.AsDict();
+    serialize::RouterSettings result;
+    result.set_bus_wait_time(rs_map.at("bus_wait_time"s).AsInt());
+    result.set_bus_velocity(rs_map.at("bus_velocity"s).AsDouble());
+    return result;
+}
+
+serialize::Router Serialize(const transport::Router& router) {
+    serialize::Router result;
+    *result.mutable_router_settings() = GetRouterSettingSerialize(router.GetSettings());
     return result;
 }
 
@@ -70,13 +141,68 @@ void AddBusFromDB(transport::Catalogue& tcat, const serialize::TransportCatalogu
     }
 }
 
+json::Node ToNode(const serialize::Point& p) {
+    return json::Node(json::Array{ {p.x()}, {p.y()} });
+}
+
+json::Node ToNode(const serialize::Color& c) {
+    if (!c.name().empty()) {
+        return json::Node(c.name());
+    }
+    else if (c.has_rgb()) {
+        const serialize::RGB& rgb = c.rgb();
+        return json::Node(json::Array{ {rgb.red()}, {rgb.green()}, {rgb.blue()} });
+    }
+    else if (c.has_rgba()) {
+        const serialize::RGBA& rgba = c.rgba();
+        return json::Node(json::Array{ {rgba.red()}, {rgba.green()}, {rgba.blue()}, {rgba.opacity()} });
+    }
+    else
+        return json::Node("none"s);
+}
+
+json::Node ToNode(const google::protobuf::RepeatedPtrField<serialize::Color>& cv) {
+    json::Array result;
+    result.reserve(cv.size());
+    for (const auto& c : cv) {
+        result.emplace_back(ToNode(c));
+    }
+    return json::Node(std::move(result));
+}
+
+json::Node GetRenderSettingsFromDB(const serialize::TransportCatalogue& database) {
+    const serialize::RenderSettings& rs = database.render_settings();
+    return json::Node(json::Dict{
+                    {{"width"s},{ rs.width() }},
+                    {{"height"s},{ rs.height() }},
+                    {{"padding"s},{ rs.padding() }},
+                    {{"stop_radius"s},{ rs.stop_radius() }},
+                    {{"line_width"s},{ rs.line_width() }},
+                    {{"bus_label_font_size"s},{ rs.bus_label_font_size() }},
+                    {{"bus_label_offset"s},ToNode(rs.bus_label_offset())},
+                    {{"stop_label_font_size"s},{rs.stop_label_font_size()}},
+                    {{"stop_label_offset"s},ToNode(rs.stop_label_offset())},
+                    {{"underlayer_color"s},ToNode(rs.underlayer_color())},
+                    {{"underlayer_width"s},{rs.underlayer_width()}},
+                    {{"color_palette"s},ToNode(rs.color_palette())},
+        });
+}
+
+json::Node GetRouterSettingsFromDB(const serialize::Router& router) {
+    const serialize::RouterSettings& rs = router.router_settings();
+    return json::Node(json::Dict{
+                    {{"bus_wait_time"s},{ rs.bus_wait_time() }},
+                    {{"bus_velocity"s},{ rs.bus_velocity() }}
+        });
+}
+
 std::tuple<transport::Catalogue, renderer::MapRenderer, transport::Router>
     Deserialize(std::istream& input) {
     serialize::TransportCatalogue database;
     database.ParseFromIstream(&input);
     transport::Catalogue tcat;
-    renderer::MapRenderer renderer{};
-    transport::Router router{};
+    renderer::MapRenderer renderer(GetRenderSettingsFromDB(database));
+    transport::Router router(GetRouterSettingsFromDB(database.router()));
     AddStopFromDB(tcat, database);
     AddBusFromDB(tcat, database);
     return { std::move(tcat), std::move(renderer), std::move(router)};

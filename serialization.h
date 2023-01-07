@@ -10,11 +10,19 @@
 
 #include <transport_catalogue.pb.h>
 
-void Serialize(const transport::Catalogue& tcat, std::ostream& output);
+void Serialize(const transport::Catalogue& tcat,
+    const renderer::MapRenderer& renderer,
+    const transport::Router& router,
+    std::ostream& output);
 
 serialize::Stop Serialize(const transport::Stop* stop);
 
 serialize::Bus Serialize(const transport::Bus* bus);
 
-std::tuple<transport::Catalogue, renderer::MapRenderer, transport::Router>
-    Deserialize(std::istream& input);
+serialize::RenderSettings GetRenderSettingSerialize(const json::Node& render_settings);
+
+serialize::RouterSettings GetRouterSettingSerialize(const json::Node& router_settings);
+
+serialize::Router Serialize(const transport::Router& router);
+
+std::tuple<transport::Catalogue, renderer::MapRenderer, transport::Router> Deserialize(std::istream& input);
